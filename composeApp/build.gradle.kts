@@ -1,5 +1,4 @@
 import com.android.build.api.dsl.ApplicationExtension
-import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -71,24 +70,8 @@ kotlin {
         }
     }
 
-    jvm {
-        compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_21)
-        }
-    }
-
     compilerOptions {
         freeCompilerArgs.add("-Xexpect-actual-classes")
-    }
-
-    listOf(
-        iosArm64(),
-        iosSimulatorArm64()
-    ).forEach { iosTarget ->
-        iosTarget.binaries.framework {
-            baseName = "ComposeApp"
-            isStatic = true
-        }
     }
 
     sourceSets {
@@ -148,22 +131,6 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
-        }
-        jvmTest.dependencies {
-            implementation(libs.kotlin.test)
-        }
-        jvmMain.dependencies {
-            implementation(libs.desktop.jvm.linux.x64)
-            implementation(libs.desktop.jvm.macos.x64)
-            implementation(libs.desktop.jvm.windows.x64)
-            implementation(libs.desktop.jvm.macos.arm64)
-
-            // implementation(compose.desktop.currentOs)
-            implementation(libs.kotlinx.coroutinesSwing)
-            implementation(libs.ktor.client.cio)
-        }
-        iosMain.dependencies {
-            implementation(libs.ktor.client.darwin)
         }
     }
 }
@@ -260,47 +227,4 @@ androidApp.apply {
 
 dependencies {
     debugImplementation(libs.compose.uiTooling)
-}
-
-compose.desktop {
-    application {
-        mainClass = "eternal.future.tefmanager.MainKt"
-
-        buildTypes.release.proguard {
-            // 启用 ProGuard
-            isEnabled.set(true)
-            obfuscate.set(true)
-            optimize.set(true)
-            configurationFiles.from(project.file("proguard-rules-jvm.pro"))
-        }
-
-        nativeDistributions {
-            targetFormats(
-                TargetFormat.Dmg,    // macOS
-                TargetFormat.Msi,    // Windows
-                TargetFormat.AppImage // Linux AppImage
-            )
-
-            packageName = "TEFManager"
-            packageVersion = AppConfig.VERSION_NAME
-
-            // macOS 配置
-            macOS {
-                bundleID = "eternal.future.tefmanager"
-                iconFile.set(File("src/jvmMain/resources/icon.icns"))
-            }
-
-            // Windows 配置
-            windows {
-                iconFile.set(File("src/jvmMain/resources/icon.ico"))
-                menuGroup = "TEFManager"
-            }
-
-            // Linux 配置
-            linux {
-                iconFile.set(File("src/jvmMain/resources/icon.webp"))
-                menuGroup = "TEFManager"
-            }
-        }
-    }
 }
