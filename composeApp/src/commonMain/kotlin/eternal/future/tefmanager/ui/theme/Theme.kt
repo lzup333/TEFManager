@@ -54,9 +54,21 @@ fun TEFManagerTheme(
 
     // 对齐 TEFModLoader：默认使用固定配色方案（可在“外观”里切换 6 套配色）；
     // 仅在动态取色开启时才使用系统动态颜色。
-    val colorScheme = when {
+    val baseScheme = when {
         dynamicColor -> dynamicColorScheme(darkTheme)
         else -> ThemePalettes.scheme(paletteIndex, darkTheme)
+    }
+
+    // 背景 / 顶栏 / 底栏统一为同一颜色；浅色下使用纯白，整体更融洽。
+    val colorScheme = if (!darkTheme) {
+        baseScheme.copy(
+            background = Color.White,
+            surface = Color.White,
+            surfaceDim = Color.White,
+            surfaceBright = Color.White
+        )
+    } else {
+        baseScheme
     }
 
     // 应用字体缩放

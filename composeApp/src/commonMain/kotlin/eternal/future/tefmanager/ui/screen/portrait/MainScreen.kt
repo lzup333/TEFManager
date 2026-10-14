@@ -123,7 +123,7 @@ object MainScreen : Screen {
         ) { navigator ->
             Scaffold(
                 modifier = Modifier.fillMaxSize(),
-                containerColor = MaterialTheme.colorScheme.surfaceDim,
+                containerColor = MaterialTheme.colorScheme.surface,
                 topBar = {
                     val currentScreen = navigator.lastItem
                     val titled = currentScreen as? TitledScreen
@@ -167,7 +167,7 @@ object MainScreen : Screen {
                         .fillMaxSize()
                         .padding(paddingValues),
                     color = MaterialTheme.colorScheme.surface,
-                    tonalElevation = 2.dp
+                    tonalElevation = 0.dp
                 ) {
                     // 使用淡入淡出动画，过渡更自然
                     FadeTransition(
@@ -210,7 +210,7 @@ object MainScreen : Screen {
 
         NavigationBar(
             containerColor = MaterialTheme.colorScheme.surface,
-            tonalElevation = 2.dp
+            tonalElevation = 0.dp
         ) {
             navigationItems.forEachIndexed { index, item ->
                 val selected = index == selectedIndex

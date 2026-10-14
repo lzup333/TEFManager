@@ -48,15 +48,10 @@ fun AppTopBar(
     var expanded by remember { mutableStateOf(false) }
 
     Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .shadow(
-                elevation = 8.dp,
-                shape = RoundedCornerShape(bottomStart = 4.dp, bottomEnd = 4.dp)
-            ),
+        modifier = Modifier.fillMaxWidth(),
         color = MaterialTheme.colorScheme.surface,
         contentColor = MaterialTheme.colorScheme.onSurface,
-        tonalElevation = 4.dp
+        tonalElevation = 0.dp
     ) {
         TopAppBar(
             title = {
