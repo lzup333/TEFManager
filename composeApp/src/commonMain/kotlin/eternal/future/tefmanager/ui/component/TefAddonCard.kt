@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Memory
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ElevatedCard
@@ -72,6 +73,7 @@ fun TefModCard(
     onDelete: (() -> Unit)? = null,
     onInfo: (() -> Unit)? = null,
     onOpen: (() -> Unit)? = null,
+    onSettings: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     TefAddonCard(
@@ -88,6 +90,7 @@ fun TefModCard(
         onDelete = onDelete,
         onInfo = onInfo,
         onOpen = onOpen,
+        onSettings = onSettings,
         modifier = modifier
     )
 }
@@ -140,6 +143,7 @@ private fun TefAddonCard(
     onDelete: (() -> Unit)?,
     onInfo: (() -> Unit)?,
     onOpen: (() -> Unit)?,
+    onSettings: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -209,6 +213,11 @@ private fun TefAddonCard(
                         if (onOpen != null) {
                             IconButton(onClick = onOpen) {
                                 Icon(Icons.Default.Extension, contentDescription = "Open")
+                            }
+                        }
+                        if (onSettings != null) {
+                            IconButton(onClick = onSettings) {
+                                Icon(Icons.Default.Tune, contentDescription = "Settings")
                             }
                         }
                         if (onDelete != null) {

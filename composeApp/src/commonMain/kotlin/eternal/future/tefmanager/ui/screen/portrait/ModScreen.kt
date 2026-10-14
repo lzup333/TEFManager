@@ -206,6 +206,9 @@ object ModScreen : Screen, MainScreen.TitledScreen {
                         onDelete = {
                             runBlocking { manager?.delete(mod.pkgId) }
                         },
+                        onSettings = if (mod.settings.isNotEmpty()) {
+                            { navigator?.push(ModSettingsScreen(loaderId, mod.pkgId)) }
+                        } else null,
                         onInfo = if (detailsUrl.isNotBlank()) {
                             {
                                 openUrl(detailsUrl)
