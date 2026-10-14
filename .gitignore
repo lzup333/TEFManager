@@ -40,3 +40,6 @@ google-services.json
 composeApp/src/androidMain/resources/assets
 composeApp/src/androidMain/jniLibs/
 composeApp/libs/android/terraria.jar
+
+# 本地参考资料，不入库
+旧版风格加载器源码.zip

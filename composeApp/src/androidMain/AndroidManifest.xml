@@ -58,6 +58,7 @@
             android:windowFullscreen="true"
             android:windowTranslucentStatus="true"
             android:resizeableActivity="true"
+            android:screenOrientation="portrait"
             android:exported="true"
             android:configChanges="orientation|screenSize|keyboardHidden|screenLayout|smallestScreenSize|uiMode"
             android:name=".MainActivity">

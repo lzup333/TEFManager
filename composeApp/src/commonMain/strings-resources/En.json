@@ -92,7 +92,9 @@
   "resource.install.status.allCompleted": "All resource packs installed",
   "resource.install.button.installing": "Installing...",
 
-  "manager.title": "Management",
+  "manager.title": "Loader",
+  "manager.mod.title": "Mods",
+  "manager.add": "Add",
   "manager.searchMod": "Search mods...",
   "manager.details": "Details",
   "manager.dependency": "Dependencies",
@@ -139,6 +141,9 @@
   "manager.modloader.disabledHint": "Enable ${loader} in the 'Mod Loaders' page",
 
   "manager.mod.add": "Add Mod",
+  "manager.mod.empty": "No mods",
+  "manager.mod.emptyHint": "Tap the button at the bottom right to add mods",
+  "manager.mod.resourceHint": "Resource pack management",
   "manager.mod.verified": "Verified",
   "manager.mod.experimental": "Experimental",
   "manager.mod.deprecated": "Deprecated",
@@ -347,5 +352,16 @@
   "root.dialog.message": "Please grant Root permission to the app, otherwise the game will not start.",
   "root.dialog.description": "Root permission is required to modify private directory permissions so that the game can access resource pack files.",
   "root.dialog.warning": "Failure to grant Root permission will prevent the game from starting normally",
-  "root.dialog.confirm": "Exit App"
+  "root.dialog.confirm": "Exit App",
+
+  "settings.appearance.palette": "Color Scheme",
+  "settings.appearance.paletteDec": "Select the app color scheme",
+  "settings.appearance.ocean": "Cang Hai Ming Yue",
+  "settings.appearance.autumn": "Zhu Que Lie Yang",
+  "settings.appearance.green": "Cui Zhu You Lin",
+  "settings.appearance.yellow": "Jin Qiu Dao Xiang",
+  "settings.appearance.pink": "Tao Hua Chun Shui",
+  "settings.appearance.purple": "Zi Qi Dong Lai",
+  "common.exit": "Exit",
+  "common.more": "More"
 }

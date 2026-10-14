@@ -5,7 +5,6 @@ import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import com.materialkolor.rememberDynamicColorScheme
 import eternal.future.tefmanager.ConfigurationState
 import eternal.future.tefmanager.ConfigurationState.AppConfig.ThemeMode
 import kotlinx.datetime.TimeZone
@@ -41,6 +40,7 @@ expect fun dynamicColorScheme(darkTheme: Boolean): ColorScheme
 fun TEFManagerTheme(
     themeMode: ThemeMode = ConfigurationState.themeMode,
     dynamicColor: Boolean = ConfigurationState.dynamicColor,
+    paletteIndex: Int = ConfigurationState.themePalette,
     seedColor: Color = ConfigurationState.themeSeedColor,
     fontSizeScale: Float = ConfigurationState.fontSizeScale,
     content: @Composable () -> Unit
@@ -52,9 +52,11 @@ fun TEFManagerTheme(
         ThemeMode.AUTO -> isAutoDarkTheme()
     }
 
+    // 对齐 TEFModLoader：默认使用固定配色方案（可在“外观”里切换 6 套配色）；
+    // 仅在动态取色开启时才使用系统动态颜色。
     val colorScheme = when {
         dynamicColor -> dynamicColorScheme(darkTheme)
-        else -> rememberDynamicColorScheme(seedColor = seedColor, isDark = darkTheme)
+        else -> ThemePalettes.scheme(paletteIndex, darkTheme)
     }
 
     // 应用字体缩放

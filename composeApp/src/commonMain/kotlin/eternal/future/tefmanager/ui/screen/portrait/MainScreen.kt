@@ -10,10 +10,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.Extension
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Widgets
+import androidx.compose.material.icons.rounded.Extension
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material.icons.rounded.Settings
@@ -46,9 +51,12 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.transitions.FadeTransition
 import eternal.future.tefmanager.strings.StringsResource.Strings
+import eternal.future.tefmanager.ui.component.AppTopBar
 import eternal.future.tefmanager.ui.component.RefreshIconButton
 import eternal.future.tefmanager.ui.dialogs.UpdateOutdatedDialog
 import eternal.future.tefmanager.utils.addon.AddonManager
+import eternal.future.tefmanager.utils.exitApplication
+import eternal.future.tefmanager.utils.openUrl
 import org.jetbrains.compose.resources.painterResource
 import tefmanager.composeapp.generated.resources.Res
 import tefmanager.composeapp.generated.resources.tefmanager_logo
@@ -96,6 +104,8 @@ object MainScreen : Screen {
     override fun Content() {
         var showUpdateOutdatedDialog by remember { mutableStateOf(false) }
 
+        val navigationItems = buildNavigationItems()
+
         LaunchedEffect(Unit) {
             AddonManager.updateOutdatedComponents(
                 onNeedUpdate = {
@@ -116,66 +126,38 @@ object MainScreen : Screen {
                 containerColor = MaterialTheme.colorScheme.surfaceDim,
                 topBar = {
                     val currentScreen = navigator.lastItem
-                    var refreshAction: (() -> Unit)? by mutableStateOf(((currentScreen as TitledScreen).refreshAction))
-                    val title = (currentScreen as TitledScreen).title
+                    val titled = currentScreen as? TitledScreen
+                    val title = titled?.title ?: ""
+                    val isRoot = navigationItems.any { it.screen::class == currentScreen::class }
+                    val isHome = currentScreen::class == HomeScreen::class
 
-                    Surface(
-                        tonalElevation = 2.dp,
-                        color = MaterialTheme.colorScheme.surface
-                    ) {
-                        CenterAlignedTopAppBar(
-                            title = {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                ) {
-                                    Surface(
-                                        modifier = Modifier.size(36.dp)
-                                            .padding(6.dp),
-                                        shape = CircleShape,
-                                        color = MaterialTheme.colorScheme.onPrimary
-                                    ) {
-                                        Box(contentAlignment = Alignment.Center) {
-                                            Icon(
-                                                painter = painterResource(Res.drawable.tefmanager_logo),
-                                                contentDescription = "Logo",
-                                                tint = MaterialTheme.colorScheme.primary,
-                                                modifier = Modifier.size(20.dp)
-                                            )
-                                        }
-                                    }
+                    // 主页右上角三点菜单：设置 / 退出
+                    val menuItems = mapOf(
+                        Strings.settings.title to Pair(Icons.Default.Settings) {
+                            navigator.push(SettingsScreen)
+                        },
+                        Strings.common.exit to Pair(Icons.AutoMirrored.Filled.ExitToApp) {
+                            exitApplication()
+                        }
+                    )
 
-                                    Text(
-                                        text = title,
-                                        style = MaterialTheme.typography.titleLarge.copy(
-                                            fontWeight = FontWeight.SemiBold
-                                        ),
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                }
-                            },
-                            colors = TopAppBarDefaults.topAppBarColors(
-                                containerColor = Color.Transparent,
-                                scrolledContainerColor = Color.Transparent,
-                                navigationIconContentColor = Color.Unspecified,
-                                titleContentColor = MaterialTheme.colorScheme.onSurface,
-                                actionIconContentColor = Color.Unspecified
-                            ),
-                            actions = {
-                                refreshAction?.let { action ->
-                                    RefreshIconButton(
-                                        refreshAction = action
-                                    )
-                                }
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp)
-                        )
-                    }
+                    AppTopBar(
+                        title = title,
+                        showBackButton = !isRoot,
+                        showMenu = isHome,
+                        onBackClick = { navigator.pop() },
+                        menuItems = menuItems,
+                        actions = {
+                            titled?.refreshAction?.let { action ->
+                                RefreshIconButton(
+                                    refreshAction = action
+                                )
+                            }
+                        }
+                    )
                 },
                 bottomBar = {
-                    ModernBottomNavigation(navigator = navigator)
+                    ModernBottomNavigation(navigator = navigator, navigationItems = navigationItems)
                 }
             ) { paddingValues ->
                 if (showUpdateOutdatedDialog) UpdateOutdatedDialog {}
@@ -198,35 +180,30 @@ object MainScreen : Screen {
     }
 
     @Composable
-    private fun ModernBottomNavigation(navigator: Navigator) {
-        val navigationItems = listOf(
-            NavigationItem(
-                screen = HomeScreen,
-                selectedIcon = Icons.Rounded.Home,
-                unselectedIcon = Icons.Outlined.Home,
-                label = Strings.home.title,
-                isPrimary = true
-            ),
-            NavigationItem(
-                screen = ResourcePackScreen,
-                selectedIcon = Icons.Rounded.Palette,
-                unselectedIcon = Icons.Outlined.Palette,
-                label = Strings.resource.title
-            ),
-            NavigationItem(
-                screen = ManagerScreen,
-                selectedIcon = Icons.Rounded.Widgets,
-                unselectedIcon = Icons.Outlined.Widgets,
-                label = Strings.manager.title
-            ),
-            NavigationItem(
-                screen = SettingsScreen,
-                selectedIcon = Icons.Rounded.Settings,
-                unselectedIcon = Icons.Outlined.Settings,
-                label = Strings.settings.title
-            )
+    private fun buildNavigationItems(): List<NavigationItem> = listOf(
+        NavigationItem(
+            screen = HomeScreen,
+            selectedIcon = Icons.Rounded.Home,
+            unselectedIcon = Icons.Outlined.Home,
+            label = Strings.home.title,
+            isPrimary = true
+        ),
+        NavigationItem(
+            screen = ModScreen,
+            selectedIcon = Icons.Rounded.Extension,
+            unselectedIcon = Icons.Outlined.Extension,
+            label = Strings.manager.mod.title
+        ),
+        NavigationItem(
+            screen = ManagerScreen,
+            selectedIcon = Icons.Rounded.Widgets,
+            unselectedIcon = Icons.Outlined.Widgets,
+            label = Strings.manager.title
         )
+    )
 
+    @Composable
+    private fun ModernBottomNavigation(navigator: Navigator, navigationItems: List<NavigationItem>) {
         val currentScreen = navigator.lastItem
         val selectedIndex = navigationItems.indexOfFirst { it.screen::class == currentScreen::class }
             .coerceAtLeast(0)
@@ -247,7 +224,7 @@ object MainScreen : Screen {
                     },
                     icon = {
                         Icon(
-                            imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
+                            imageVector = item.selectedIcon,
                             contentDescription = item.label,
                             modifier = Modifier.size(24.dp)
                         )
@@ -255,17 +232,10 @@ object MainScreen : Screen {
                     label = {
                         Text(
                             text = item.label,
-                            maxLines = 1,
-                            fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal
+                            maxLines = 1
                         )
                     },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = MaterialTheme.colorScheme.primary,
-                        selectedTextColor = MaterialTheme.colorScheme.primary,
-                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        indicatorColor = MaterialTheme.colorScheme.primaryContainer
-                    ),
+                    alwaysShowLabel = false,
                     modifier = Modifier.weight(1f)
                 )
             }

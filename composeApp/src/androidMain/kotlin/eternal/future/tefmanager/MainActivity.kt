@@ -51,8 +51,6 @@ import eternal.future.tefmanager.utils.addon.ModuleManager
 import eternal.future.tefmanager.utils.isVersionGreater
 import kotlinx.coroutines.runBlocking
 import okio.FileSystem
-import eternal.future.tefmanager.ui.screen.landscape.MainScreen as LandscapeMainScreen
-import eternal.future.tefmanager.ui.screen.landscape.OnboardingScreen as LandscapeOnboardingScreen
 import eternal.future.tefmanager.ui.screen.portrait.MainScreen as PortraitMainScreen
 import eternal.future.tefmanager.ui.screen.portrait.OnboardingScreen as PortraitOnboardingScreen
 
@@ -307,26 +305,13 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     private fun ScreenSwitcher() {
-        val configuration = LocalConfiguration.current
-        when (configuration.orientation) {
-            Configuration.ORIENTATION_LANDSCAPE -> {
-                if (!ConfigurationState.initialized) LandscapeOnboardingScreen {
-                    ConfigurationState.initialized = true
-                }
-                else LandscapeMainScreen.Content()
+        // 横屏界面已废弃：始终使用竖屏布局
+        if (!ConfigurationState.initialized) {
+            PortraitOnboardingScreen {
+                ConfigurationState.initialized = true
             }
-            Configuration.ORIENTATION_PORTRAIT -> {
-                if (!ConfigurationState.initialized) PortraitOnboardingScreen {
-                    ConfigurationState.initialized = true
-                }
-                else PortraitMainScreen.Content()
-            }
-            else -> {
-                if (!ConfigurationState.initialized) PortraitOnboardingScreen {
-                    ConfigurationState.initialized = true
-                }
-                else PortraitMainScreen.Content()
-            }
+        } else {
+            PortraitMainScreen.Content()
         }
     }
 

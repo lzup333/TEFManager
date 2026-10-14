@@ -44,7 +44,8 @@ object ConfigurationState {
         var themeSeedColor: ULong = Color(0xFF2196F3).value,
         var fontSizeScale: Float = 1.0f,
         var autoUpdate: Boolean = true,
-        var dynamicColor: Boolean = Platform.dynamicColor,
+        var dynamicColor: Boolean = false,
+        var themePalette: Int = 0,
         var kernelLogEnabled: Boolean = true,
         var softwareLogEnabled: Boolean = true,
         var autoCleanLogs: Boolean = true,
@@ -124,6 +125,7 @@ object ConfigurationState {
     var fontSizeScale by AutoConfigDelegate(AppConfig::fontSizeScale)
     var autoUpdate by AutoConfigDelegate(AppConfig::autoUpdate)
     var dynamicColor by AutoConfigDelegate(AppConfig::dynamicColor)
+    var themePalette by AutoConfigDelegate(AppConfig::themePalette)
     var kernelLogEnabled by AutoConfigDelegate(AppConfig::kernelLogEnabled)
     var softwareLogEnabled by AutoConfigDelegate(AppConfig::softwareLogEnabled)
     var autoCleanLogs by AutoConfigDelegate(AppConfig::autoCleanLogs)

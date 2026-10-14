@@ -86,7 +86,9 @@
   "resource.install.status.starting": "Начало установки: ${name}",
   "resource.install.status.allCompleted": "Установка всех пакетов ресурсов завершена",
   "resource.install.button.installing": "Установка...",
-  "manager.title": "Управление",
+  "manager.title": "Loader",
+  "manager.mod.title": "Моды",
+  "manager.add": "Добавить",
   "manager.searchMod": "Поиск модов...",
   "manager.details": "Подробности",
   "manager.dependency": "Зависимости",
@@ -127,6 +129,9 @@
   "manager.modloader.disabled": "Загрузчик отключён",
   "manager.modloader.disabledHint": "Включите ${loader} на странице «Загрузчики модов»",
   "manager.mod.add": "Добавить мод",
+  "manager.mod.empty": "Модов нет",
+  "manager.mod.emptyHint": "Нажмите кнопку в правом нижнем углу, чтобы добавить моды",
+  "manager.mod.resourceHint": "Управление ресурспаками",
   "manager.mod.verified": "Проверено",
   "manager.mod.experimental": "Экспериментальный",
   "manager.mod.deprecated": "Устаревший",
@@ -314,5 +319,16 @@
   "root.dialog.message": "Пожалуйста, предоставьте приложению права Root, иначе игра не запустится.",
   "root.dialog.description": "Требуются права Root для изменения разрешений приватной директории, чтобы игра могла получить доступ к файлам ресурсных пакетов.",
   "root.dialog.warning": "Отсутствие прав Root не позволит игре запуститься нормально",
-  "root.dialog.confirm": "Выйти из приложения"
+  "root.dialog.confirm": "Выйти из приложения",
+
+  "settings.appearance.palette": "Цветовая схема",
+  "settings.appearance.paletteDec": "Выберите цветовую схему приложения",
+  "settings.appearance.ocean": "Лунный океан",
+  "settings.appearance.autumn": "Огненный феникс",
+  "settings.appearance.green": "Изумрудный лес",
+  "settings.appearance.yellow": "Золотая осень",
+  "settings.appearance.pink": "Персиковый ручей",
+  "settings.appearance.purple": "Пурпурный восток",
+  "common.exit": "Выход",
+  "common.more": "Ещё"
 }

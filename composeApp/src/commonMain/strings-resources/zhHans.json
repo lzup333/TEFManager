@@ -92,7 +92,9 @@
   "resource.install.status.allCompleted": "所有资源包安装完成",
   "resource.install.button.installing": "安装中...",
 
-  "manager.title": "管理",
+  "manager.title": "Loader",
+  "manager.mod.title": "模组",
+  "manager.add": "添加",
   "manager.searchMod": "搜索模组...",
   "manager.details": "详细信息",
   "manager.dependency": "依赖项",
@@ -139,6 +141,9 @@
   "manager.modloader.disabledHint": "在「模组加载器」页面中启用 ${loader}",
 
   "manager.mod.add": "添加模组",
+  "manager.mod.empty": "暂无模组",
+  "manager.mod.emptyHint": "点击右下角按钮添加模组",
+  "manager.mod.resourceHint": "资源包管理",
   "manager.mod.verified": "已验证",
   "manager.mod.experimental": "实验性",
   "manager.mod.deprecated": "已弃用",
@@ -348,5 +353,16 @@
   "root.dialog.message": "请授予软件 Root 权限，否则无法启动游戏。",
   "root.dialog.description": "需要 Root 权限来修改私有目录权限，以便游戏能够访问资源包文件。",
   "root.dialog.warning": "未授予 Root 权限将导致游戏无法正常启动",
-  "root.dialog.confirm": "退出应用"
+  "root.dialog.confirm": "退出应用",
+
+  "settings.appearance.palette": "配色方案",
+  "settings.appearance.paletteDec": "选择应用配色方案",
+  "settings.appearance.ocean": "沧海明月",
+  "settings.appearance.autumn": "朱雀烈阳",
+  "settings.appearance.green": "翠竹幽林",
+  "settings.appearance.yellow": "金秋稻香",
+  "settings.appearance.pink": "桃花春水",
+  "settings.appearance.purple": "紫气东来",
+  "common.exit": "退出",
+  "common.more": "更多"
 }
