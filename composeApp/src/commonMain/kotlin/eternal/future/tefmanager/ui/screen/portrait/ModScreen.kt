@@ -156,19 +156,13 @@ object ModScreen : Screen, MainScreen.TitledScreen {
         }
 
         // 所有已启用 Loader 的 Mod（自动匹配）
-        val modGroups = remember(
-            enabledLoaders.toMap(),
-            ModLoaderManager.packs,
-            AddonManager.modManagersList.toMap()
-        ) {
-            ModLoaderManager.packs
-                .filter { enabledLoaders[it.pkgId] == true }
-                .mapNotNull { loader ->
-                    val manager = AddonManager.modManagersList[loader.pkgId] ?: return@mapNotNull null
-                    manager.packs.map { loader.pkgId to it }
-                }
-                .flatten()
-        }
+        // 直接读取快照状态（不缓存），这样新增/删除 Mod、启用/禁用 Loader 都会即时刷新。
+        val modGroups = ModLoaderManager.packs
+            .filter { enabledLoaders[it.pkgId] == true }
+            .flatMap { loader ->
+                val manager = AddonManager.modManagersList[loader.pkgId]
+                manager?.packs?.map { mod -> loader.pkgId to mod } ?: emptyList()
+            }
 
         Box(modifier = Modifier.fillMaxSize()) {
             LazyColumn(modifier = Modifier.fillMaxSize()) {
@@ -257,8 +251,4 @@ object ModScreen : Screen, MainScreen.TitledScreen {
 
     override val title: String
         get() = Strings.manager.mod.title
-
-    override val refreshAction: (() -> Unit) = {
-        AddonManager.refreshModManager(ModLoaderManager.packs)
-    }
 }
