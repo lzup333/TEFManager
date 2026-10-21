@@ -1,5 +1,6 @@
 package eternal.future.tefmanager.utils.modpack
 
+import eternal.future.tefmanager.ConfigurationState
 import eternal.future.tefmanager.Platform
 import eternal.future.tefmanager.utils.AppLogger
 import okio.FileSystem
@@ -18,6 +19,10 @@ object ModPackBackup {
     private val backupDirs = listOf("mods", "modloader", "module", "plugin", "tefkernel")
 
     fun backupNow(reason: String = "modpack"): Path? {
+        if (!ConfigurationState.modPackAutoBackup) {
+            AppLogger.i("ModPack backup disabled, skipping")
+            return null
+        }
         return try {
             val safeReason = reason.replace(Regex("[^a-zA-Z0-9._\\-\\u4e00-\\u9fa5]"), "_").take(32)
             val root = Platform.getData("backups") /
@@ -36,6 +41,21 @@ object ModPackBackup {
             AppLogger.e("ModPack backup failed", e)
             null
         }
+    }
+
+    fun backupsRoot(): Path = Platform.getData("backups")
+
+    /** 删除所有容器备份。 */
+    fun clear(): Boolean = try {
+        val root = backupsRoot()
+        if (FileSystem.SYSTEM.exists(root)) {
+            FileSystem.SYSTEM.deleteRecursively(root)
+        }
+        AppLogger.i("ModPack backups cleared")
+        true
+    } catch (e: Exception) {
+        AppLogger.e("ModPack backup clear failed", e)
+        false
     }
 
     private fun copyDir(src: Path, dst: Path) {

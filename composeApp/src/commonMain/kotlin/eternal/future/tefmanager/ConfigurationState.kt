@@ -53,7 +53,8 @@ object ConfigurationState {
         var maxAppLogFiles: Int = 10,
         var maxAppLogSizeMB: Int = 5,
         var modSupportEnabled: Boolean = true,
-        var redirectSavesEnabled: Boolean = false
+        var redirectSavesEnabled: Boolean = false,
+        var modPackAutoBackup: Boolean = true
         ) {
         enum class ThemeMode {
             LIGHT, DARK, AUTO, SYSTEM;
@@ -132,4 +133,5 @@ object ConfigurationState {
     var autoCleanTime by AutoConfigDelegate(AppConfig::autoCleanTime)
     var maxAppLogFiles by AutoConfigDelegate(AppConfig::maxAppLogFiles)
     var maxAppLogSizeMB by AutoConfigDelegate(AppConfig::maxAppLogSizeMB)
+    var modPackAutoBackup by AutoConfigDelegate(AppConfig::modPackAutoBackup)
 }

@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.Image
@@ -39,11 +40,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
+import eternal.future.tefmanager.ConfigurationState
 import eternal.future.tefmanager.Platform
 import eternal.future.tefmanager.strings.StringsResource.Strings
 import eternal.future.tefmanager.ui.component.TefActionButton
+import eternal.future.tefmanager.ui.component.TefModernCheckBox
 import eternal.future.tefmanager.ui.component.TefModCard
 import eternal.future.tefmanager.utils.exitApplication
+import eternal.future.tefmanager.utils.modpack.ModPackBackup
 import eternal.future.tefmanager.utils.modpack.ModPackManager
 import eternal.future.tefmanager.utils.modpack.ModPackStore
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
@@ -91,6 +95,7 @@ object ContainerScreen : Screen, MainScreen.TitledScreen {
         var message by remember { mutableStateOf<String?>(null) }
         var needsRestart by remember { mutableStateOf(false) }
         var pendingDeleteId by remember { mutableStateOf<String?>(null) }
+        var showClearBackupsConfirm by remember { mutableStateOf(false) }
         var pendingExportZip by remember { mutableStateOf<Path?>(null) }
 
         val iconPicker = rememberFilePickerLauncher(mode = FileKitMode.Single) { file ->
@@ -194,6 +199,23 @@ object ContainerScreen : Screen, MainScreen.TitledScreen {
                         icon = Icons.Default.FileUpload,
                         title = Strings.manager.modpack.import,
                         onClick = { importPicker.launch() }
+                    )
+
+                    TefModernCheckBox(
+                        title = Strings.manager.modpack.autoBackup,
+                        contentDescription = Strings.manager.modpack.autoBackupHint,
+                        isChecked = ConfigurationState.modPackAutoBackup,
+                        onCheckedChange = { ConfigurationState.modPackAutoBackup = it },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 6.dp)
+                    )
+
+                    TefActionButton(
+                        icon = Icons.Default.DeleteSweep,
+                        title = Strings.manager.modpack.clearBackups,
+                        description = Strings.manager.modpack.clearBackupsHint,
+                        onClick = { showClearBackupsConfirm = true }
                     )
                 }
 
@@ -321,6 +343,33 @@ object ContainerScreen : Screen, MainScreen.TitledScreen {
                 },
                 dismissButton = {
                     TextButton(onClick = { pendingDeleteId = null }) {
+                        Text(Strings.cancel)
+                    }
+                }
+            )
+        }
+
+        if (showClearBackupsConfirm) {
+            AlertDialog(
+                onDismissRequest = { showClearBackupsConfirm = false },
+                title = { Text(Strings.manager.modpack.clearBackups) },
+                text = { Text(Strings.manager.modpack.clearBackupsConfirm) },
+                confirmButton = {
+                    TextButton(onClick = {
+                        showClearBackupsConfirm = false
+                        val ok = ModPackBackup.clear()
+                        needsRestart = false
+                        message = if (ok) {
+                            Strings.manager.modpack.clearBackupsDone
+                        } else {
+                            Strings.manager.modpack.failed("UNKNOWN")
+                        }
+                    }) {
+                        Text(Strings.confirm)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showClearBackupsConfirm = false }) {
                         Text(Strings.cancel)
                     }
                 }
