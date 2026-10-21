@@ -4,7 +4,6 @@ import eternal.future.tefmanager.ConfigurationState
 import eternal.future.tefmanager.Platform
 import eternal.future.tefmanager.model.ModPackManifest
 import eternal.future.tefmanager.utils.AppLogger
-import eternal.future.tefmanager.utils.ConfigManager
 import eternal.future.tefmanager.utils.addon.AddonManager
 import eternal.future.tefmanager.utils.addon.ModLoaderManager
 import eternal.future.tefmanager.utils.addon.ModuleManager
@@ -66,12 +65,6 @@ object ModPackManager {
                 if (FileSystem.SYSTEM.exists(dir)) {
                     count += addDirectoryToZip(dir, root, items)
                 }
-            }
-
-            val config = Platform.getData(null) / "app_config.json"
-            if (FileSystem.SYSTEM.exists(config)) {
-                items += ZipWriteItem.FileCopy("app_config.json", config)
-                count++
             }
 
             if (count == 0) {
@@ -236,8 +229,6 @@ object ModPackManager {
             val dir = Platform.getData(root)
             runCatching { if (fs.exists(dir)) fs.deleteRecursively(dir) }
         }
-        val config = Platform.getData(null) / "app_config.json"
-        runCatching { if (fs.exists(config)) fs.delete(config) }
 
         var count = 0
         snapshotDirs.forEach { root ->
@@ -246,21 +237,6 @@ object ModPackManager {
                 onProgress(root)
                 copyDirectory(src, Platform.getData(root))
                 count++
-            }
-        }
-        val configSrc = tmp / "app_config.json"
-        if (fs.exists(configSrc)) {
-            val configDst = Platform.getData(null) / "app_config.json"
-            runCatching {
-                configDst.parent?.let { fs.createDirectories(it) }
-                fs.copy(configSrc, configDst)
-            }
-            count++
-            // 避免还原旧配置后重新触发引导
-            runCatching {
-                val cfg = ConfigManager.getInstance()
-                cfg.loadConfig()
-                cfg.updateConfig { it.initialized = true }
             }
         }
 
