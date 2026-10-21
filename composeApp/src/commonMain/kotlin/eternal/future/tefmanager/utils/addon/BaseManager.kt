@@ -156,6 +156,14 @@ abstract class BaseManager<T>(
         packs.addAll(allPacks)
     }
 
+    /** 目录被整体替换后，从磁盘热重载。 */
+    fun reload() {
+        runCatching {
+            packsDataBase.reload()
+            refreshPacksList()
+        }
+    }
+
     private fun getEnableFilePath(): Path = config.dir / "enables.txt"
 
     protected fun getPkgFilePath(pkgId: String): Path = config.dir / config.type.getPkgDirName() / (pkgId + if (config.type != AddonConfig.AddonType.Mod) ".tefpkg" else "")

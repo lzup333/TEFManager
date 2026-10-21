@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material3.AlertDialog
@@ -28,24 +27,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
-import eternal.future.tefmanager.Platform
-import eternal.future.tefmanager.model.ModPackEntry
 import eternal.future.tefmanager.strings.StringsResource.Strings
 import eternal.future.tefmanager.ui.component.TefActionButton
-import eternal.future.tefmanager.ui.component.TefLoaderCard
-import eternal.future.tefmanager.ui.component.TefModCard
-import eternal.future.tefmanager.utils.addon.AddonManager
-import eternal.future.tefmanager.utils.addon.ModLoaderManager
-import eternal.future.tefmanager.utils.exitApplication
 import eternal.future.tefmanager.utils.modpack.ModPackStore
 import kotlinx.coroutines.launch
-import okio.Path
 
 /*******************************************************************************
  * TEFManager - ModPackDetailScreen
  *
- * 整合包（容器）详情：应用此快照 = 覆盖并切换当前存储；
- * 应用后可单独开关包内某个 Mod/Loader。
+ * 容器详情：应用（切换存储）/ 删除。切换为热重载，无需重启。
  *******************************************************************************/
 
 class ModPackDetailScreen(
@@ -61,11 +51,24 @@ class ModPackDetailScreen(
         var busy by remember { mutableStateOf(false) }
         var busyText by remember { mutableStateOf("") }
         var message by remember { mutableStateOf<String?>(null) }
-        var needsRestart by remember { mutableStateOf(false) }
         var showDeleteConfirm by remember { mutableStateOf(false) }
 
         val pack = ModPackStore.find(packId)
-        val entries = pack?.manifest?.entries.orEmpty()
+
+        fun applyContainer() {
+            scope.launch {
+                busy = true
+                busyText = Strings.manager.modpack.applying
+                val result = ModPackStore.applyPack(packId) { name ->
+                    busyText = "${Strings.manager.modpack.applying} $name"
+                }
+                busy = false
+                result.fold(
+                    onSuccess = { message = Strings.manager.modpack.applySuccess },
+                    onFailure = { e -> message = Strings.manager.modpack.failed(e.message ?: "UNKNOWN") }
+                )
+            }
+        }
 
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -79,34 +82,26 @@ class ModPackDetailScreen(
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
-                        text = Strings.manager.modpack.contents(entries.size),
+                        text = Strings.manager.modpack.snapshotSummary(pack?.manifest?.fileCount ?: 0),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(horizontal = 8.dp)
                     )
+                    pack?.manifest?.kernelVersion?.let { v ->
+                        Text(
+                            text = "${Strings.settings.about.kernelVersion}: $v",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 8.dp)
+                        )
+                    }
+
                     TefActionButton(
                         icon = Icons.Default.SwapHoriz,
                         title = Strings.manager.modpack.apply,
-                        onClick = {
-                            scope.launch {
-                                busy = true
-                                busyText = Strings.manager.modpack.applying
-                                val result = ModPackStore.applyPack(packId) { name ->
-                                    busyText = "${Strings.manager.modpack.applying} $name"
-                                }
-                                busy = false
-                                result.fold(
-                                    onSuccess = {
-                                        message = Strings.manager.modpack.applySuccess
-                                        needsRestart = true
-                                    },
-                                    onFailure = { e ->
-                                        message = Strings.manager.modpack.failed(e.message ?: "UNKNOWN")
-                                    }
-                                )
-                            }
-                        }
+                        onClick = { applyContainer() }
                     )
+
                     if (pack?.initial != true) {
                         TextButton(onClick = { showDeleteConfirm = true }) {
                             Text(
@@ -117,40 +112,6 @@ class ModPackDetailScreen(
                     }
                 }
                 Spacer(modifier = Modifier.height(4.dp))
-            }
-
-            items(entries, key = { "${it.type}_${it.pkgId}" }) { entry ->
-                var enabled by remember(entry.type, entry.pkgId) {
-                    mutableStateOf(isEntryEnabled(entry))
-                }
-
-                val iconPath = entryIcon(entry)
-
-                if (entry.type == "modloader" || entry.type == "plugin") {
-                    TefLoaderCard(
-                        name = entry.name,
-                        version = entry.version,
-                        description = entry.pkgId,
-                        iconPath = iconPath,
-                        enabled = enabled,
-                        onEnableChange = {
-                            enabled = it
-                            setEntryEnabled(entry, it)
-                        }
-                    )
-                } else {
-                    TefModCard(
-                        name = entry.name,
-                        version = entry.version,
-                        description = entry.pkgId,
-                        iconPath = iconPath,
-                        enabled = enabled,
-                        onEnableChange = {
-                            enabled = it
-                            setEntryEnabled(entry, it)
-                        }
-                    )
-                }
             }
         }
 
@@ -163,7 +124,10 @@ class ModPackDetailScreen(
                     TextButton(onClick = {
                         showDeleteConfirm = false
                         scope.launch {
+                            busy = true
+                            busyText = Strings.manager.modpack.applying
                             ModPackStore.deletePack(packId)
+                            busy = false
                             navigator?.pop()
                         }
                     }) {
@@ -191,60 +155,12 @@ class ModPackDetailScreen(
             AlertDialog(
                 onDismissRequest = { message = null },
                 title = { Text(Strings.manager.modpack.title) },
-                text = {
-                    Text(
-                        if (needsRestart) "$msg\n\n${Strings.manager.modpack.restartNeeded}" else msg
-                    )
-                },
+                text = { Text(msg) },
                 confirmButton = {
-                    if (needsRestart) {
-                        TextButton(onClick = {
-                            message = null
-                            exitApplication()
-                        }) { Text(Strings.manager.modpack.restart) }
-                    } else {
-                        TextButton(onClick = { message = null }) { Text(Strings.confirm) }
-                    }
-                },
-                dismissButton = if (needsRestart) {
-                    {
-                        TextButton(onClick = { message = null }) { Text(Strings.cancel) }
-                    }
-                } else null
+                    TextButton(onClick = { message = null }) { Text(Strings.confirm) }
+                }
             )
         }
-    }
-
-    private fun isEntryEnabled(entry: ModPackEntry): Boolean = when (entry.type) {
-        "modloader" -> ModLoaderManager.isEnabled(entry.pkgId)
-        "mod" -> entry.parentLoader?.let {
-            AddonManager.getOrCreateModManager(it, autoCreate = true)?.isEnabled(entry.pkgId)
-        } ?: false
-        else -> false
-    }
-
-    private fun setEntryEnabled(entry: ModPackEntry, enabled: Boolean) {
-        when (entry.type) {
-            "modloader" -> {
-                if (enabled) ModLoaderManager.enable(entry.pkgId)
-                else ModLoaderManager.disable(entry.pkgId)
-            }
-            "mod" -> entry.parentLoader?.let { loaderId ->
-                val manager = AddonManager.getOrCreateModManager(loaderId, autoCreate = true)
-                if (enabled) manager?.enable(entry.pkgId)
-                else manager?.disable(entry.pkgId)
-            }
-        }
-    }
-
-    private fun entryIcon(entry: ModPackEntry): Path? = when (entry.type) {
-        "modloader" -> Platform.getData("modloader") / "icons" / "${entry.pkgId}.icon"
-        "plugin" -> Platform.getData("plugin") / "icons" / "${entry.pkgId}.icon"
-        "module" -> Platform.getData("module") / "icons" / "${entry.pkgId}.icon"
-        "mod" -> entry.parentLoader?.let {
-            Platform.getData("mods") / it / "icons" / "${entry.pkgId}.icon"
-        }
-        else -> null
     }
 
     override val title: String

@@ -1,12 +1,17 @@
 package eternal.future.tefmanager.utils.modpack
 
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import eternal.future.tefmanager.Platform
 import eternal.future.tefmanager.model.ModPackManifest
 import eternal.future.tefmanager.strings.StringsResource
 import eternal.future.tefmanager.utils.AppLogger
 import eternal.future.tefmanager.utils.addon.AddonManager
 import eternal.future.tefmanager.utils.addon.ModLoaderManager
+import eternal.future.tefmanager.utils.addon.ModuleManager
+import eternal.future.tefmanager.utils.addon.PluginManager
 import kotlinx.serialization.json.Json
 import okio.FileSystem
 import okio.Path
@@ -44,6 +49,26 @@ object ModPackStore {
 
     val packs = mutableStateListOf<InstalledModPack>()
 
+    /** 当前生效的容器 id（单选）。 */
+    var activeId by mutableStateOf<String?>(null)
+        private set
+
+    fun setActive(id: String?) {
+        activeId = id
+        runCatching {
+            val f = root / "active.txt"
+            if (id == null) {
+                if (FileSystem.SYSTEM.exists(f)) FileSystem.SYSTEM.delete(f)
+            } else {
+                FileSystem.SYSTEM.createDirectories(root)
+                FileSystem.SYSTEM.sink(f).buffer().use {
+                    it.writeUtf8(id)
+                    it.flush()
+                }
+            }
+        }
+    }
+
     fun refresh() {
         packs.clear()
         if (!FileSystem.SYSTEM.exists(root)) return
@@ -73,6 +98,15 @@ object ModPackStore {
             )
             packs.clear()
             packs.addAll(sorted)
+
+            activeId = runCatching {
+                val f = root / "active.txt"
+                if (FileSystem.SYSTEM.exists(f)) {
+                    FileSystem.SYSTEM.source(f).buffer().use { it.readUtf8() }.trim().ifBlank { null }
+                } else {
+                    null
+                }
+            }.getOrNull()
         }.onFailure { AppLogger.e("ModPackStore.refresh failed", it) }
     }
 
@@ -149,27 +183,25 @@ object ModPackStore {
     suspend fun applyPack(id: String, onProgress: (String) -> Unit = {}): Result<Int> {
         val pack = find(id) ?: return Result.failure(IllegalStateException("NOT_FOUND"))
         val zip = pack.zipPath ?: return Result.failure(IllegalStateException("NO_PACKAGE"))
-        return ModPackManager.applyZip(zip, onProgress)
+        val result = ModPackManager.applyZip(zip, onProgress)
+        if (result.isSuccess) setActive(id)
+        return result
     }
 
     /**
-     * 删除容器（彻底）：先卸载该容器内的 Mod/Loader，再删除容器记录。
+     * 删除容器（彻底）：若为当前生效容器，先卸载当前 Mod/Loader，再删除容器记录。
      * 初始容器不可删除。
      */
     suspend fun deletePack(id: String): Boolean {
         val pack = find(id) ?: return false
         if (pack.initial) return false
 
-        // 先卸载 Mod，再卸载 Loader
-        pack.manifest.entries.filter { it.type == "mod" }.forEach { entry ->
-            runCatching {
-                entry.parentLoader?.let { loaderId ->
-                    AddonManager.getOrCreateModManager(loaderId, true)?.delete(entry.pkgId)
-                }
-            }
-        }
-        pack.manifest.entries.filter { it.type == "modloader" }.forEach { entry ->
-            runCatching { ModLoaderManager.delete(entry.pkgId) }
+        if (activeId == id) {
+            uninstallAll()
+            setActive(null)
+            ModLoaderManager.reload()
+            ModuleManager.reload()
+            PluginManager.reload()
         }
 
         runCatching {
@@ -178,6 +210,20 @@ object ModPackStore {
         }
         refresh()
         return true
+    }
+
+    private suspend fun uninstallAll() {
+        AddonManager.modManagersList.toMap().forEach { (_, manager) ->
+            manager.packs.toList().forEach { mod ->
+                runCatching { manager.delete(mod.pkgId) }
+            }
+        }
+        AddonManager.modManagersList.keys.toList().forEach {
+            runCatching { AddonManager.closeModManager(it) }
+        }
+        ModLoaderManager.packs.toList().forEach { loader ->
+            runCatching { ModLoaderManager.delete(loader.pkgId) }
+        }
     }
 
     fun find(id: String): InstalledModPack? = packs.firstOrNull { it.id == id }

@@ -146,7 +146,7 @@ object ModScreen : Screen, MainScreen.TitledScreen {
 
         val enabledLoaders = remember { mutableStateMapOf<String, Boolean>() }
 
-        LaunchedEffect(ModLoaderManager.packs) {
+        LaunchedEffect(ModLoaderManager.packs.toList()) {
             AddonManager.refreshModManager(ModLoaderManager.packs)
             ModLoaderManager.packs.forEach {
                 enabledLoaders[it.pkgId] = ModLoaderManager.isEnabled(it.pkgId)

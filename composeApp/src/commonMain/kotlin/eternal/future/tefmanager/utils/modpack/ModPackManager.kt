@@ -1,12 +1,13 @@
 package eternal.future.tefmanager.utils.modpack
 
+import eternal.future.tefmanager.ConfigurationState
 import eternal.future.tefmanager.Platform
-import eternal.future.tefmanager.model.ModItem
-import eternal.future.tefmanager.model.ModLoaderItem
 import eternal.future.tefmanager.model.ModPackManifest
 import eternal.future.tefmanager.utils.AppLogger
 import eternal.future.tefmanager.utils.addon.AddonManager
 import eternal.future.tefmanager.utils.addon.ModLoaderManager
+import eternal.future.tefmanager.utils.addon.ModuleManager
+import eternal.future.tefmanager.utils.addon.PluginManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
@@ -25,8 +26,7 @@ import kotlin.time.Clock
  *
  * 容器 = 整目录快照：包含材质/资源包、配置、Mod、Loader、内核。
  *  - 导出：把整个存储目录打包
- *  - 导入/应用：备份当前存储 → 还原整目录 → 提示重启生效
- * 兼容旧的按包安装格式（Manifest 中 fullSnapshot=false）。
+ *  - 导入/应用：备份当前存储 → 还原整目录 → 热重载管理器（免重启）
  *******************************************************************************/
 
 object ModPackManager {
@@ -37,10 +37,8 @@ object ModPackManager {
         isLenient = true
     }
 
-    /** 整目录快照包含的目录。 */
     private val snapshotDirs = listOf("mods", "modloader", "module", "plugin", "tefkernel")
 
-    /** 判断选中的文件是普通附加包还是容器。 */
     fun isModPack(path: Path): Boolean = try {
         ZipFile(FileSystem.SYSTEM.openReadOnly(path)).use {
             it.getEntry("ModPack.json") != null
@@ -69,7 +67,6 @@ object ModPackManager {
                 }
             }
 
-            // 应用配置
             val config = Platform.getData(null) / "app_config.json"
             if (FileSystem.SYSTEM.exists(config)) {
                 items += ZipWriteItem.FileCopy("app_config.json", config)
@@ -85,8 +82,9 @@ object ModPackManager {
                 author = author,
                 createdAt = Clock.System.now().toEpochMilliseconds(),
                 iconEntry = if (iconSource != null && FileSystem.SYSTEM.exists(iconSource)) "icon.png" else null,
+                kernelVersion = ConfigurationState.kernelVersion,
                 fullSnapshot = true,
-                entries = emptyList()
+                fileCount = count
             )
 
             items += ZipWriteItem.Bytes(
@@ -97,9 +95,7 @@ object ModPackManager {
                 items += ZipWriteItem.FileCopy("icon.png", iconSource)
             }
 
-            val ok = writeZipFile(destZip, items) { done, total ->
-                onProgress("$done/$total")
-            }
+            val ok = writeZipFile(destZip, items) { done, total -> onProgress("$done/$total") }
             if (!ok) Result.failure(IllegalStateException("WRITE_FAILED")) else Result.success(count)
         } catch (e: Exception) {
             AppLogger.e("Container export failed", e)
@@ -167,7 +163,6 @@ object ModPackManager {
         false
     }
 
-    /** 导入：保存该容器并立即切换过去。 */
     suspend fun import(
         zipPath: Path,
         onProgress: (String) -> Unit = {}
@@ -190,10 +185,11 @@ object ModPackManager {
             return@withContext Result.failure(IllegalStateException("SAVE_FAILED"))
         }
 
-        applyZip(zipPath, onProgress)
+        val result = applyZip(zipPath, onProgress)
+        if (result.isSuccess) ModPackStore.setActive(saved.id)
+        result
     }
 
-    /** 应用容器：备份当前存储 → 还原容器内容。 */
     suspend fun applyZip(
         zipPath: Path,
         onProgress: (String) -> Unit = {}
@@ -212,15 +208,10 @@ object ModPackManager {
             }
             val manifest = json.decodeFromString(ModPackManifest.serializer(), manifestFileText(manifestFile))
 
-            // 自动备份当前存储
             onProgress("备份当前存储")
             ModPackBackup.backupNow("before_${manifest.name}")
 
-            val result = if (manifest.fullSnapshot) {
-                applyFullSnapshot(manifest, tmp, onProgress)
-            } else {
-                applyLegacy(manifest, tmp, onProgress)
-            }
+            val result = applyFullSnapshot(manifest, tmp, onProgress)
 
             FileSystem.SYSTEM.deleteRecursively(tmp)
             result
@@ -237,7 +228,6 @@ object ModPackManager {
     ): Result<Int> {
         val fs = FileSystem.SYSTEM
 
-        // 关闭已打开的 Mod 数据库，避免覆盖时冲突
         AddonManager.modManagersList.keys.toList().forEach {
             runCatching { AddonManager.closeModManager(it) }
         }
@@ -269,74 +259,20 @@ object ModPackManager {
             count++
         }
 
+        // 热重载管理器，免重启生效
+        ModuleManager.reload()
+        PluginManager.reload()
+        ModLoaderManager.reload()
+        AddonManager.modManagersList.keys.toList().forEach {
+            runCatching { AddonManager.closeModManager(it) }
+        }
+        AddonManager.refreshModManager(ModLoaderManager.packs)
+
+        manifest.kernelVersion?.let { ConfigurationState.kernelVersion = it }
+
         return Result.success(count)
-    }
-
-    /** 兼容旧的按包安装格式。 */
-    private suspend fun applyLegacy(
-        manifest: ModPackManifest,
-        tmp: Path,
-        onProgress: (String) -> Unit
-    ): Result<Int> {
-        onProgress("清理当前 Mod / Loader")
-        clearCurrent()
-
-        manifest.kernelEntry?.let { ke ->
-            val kernelPath = tmp / ke
-            if (FileSystem.SYSTEM.exists(kernelPath)) {
-                onProgress("TEFKernel")
-                runCatching { AddonManager.installKernel(kernelPath) }
-            }
-        }
-
-        val ordered = manifest.entries.sortedBy { typeOrder(it.type) }
-        var ok = 0
-        ordered.forEach { entry ->
-            val pkg = tmp / entry.packageEntry
-            if (!FileSystem.SYSTEM.exists(pkg)) return@forEach
-            try {
-                onProgress(entry.name)
-                AddonManager.install(pkg)
-                if (entry.enabled) {
-                    runCatching {
-                        when (entry.type) {
-                            "modloader" -> ModLoaderManager.enable(entry.pkgId)
-                            "mod" -> entry.parentLoader?.let {
-                                AddonManager.getOrCreateModManager(it, true)?.enable(entry.pkgId)
-                            }
-                        }
-                    }
-                }
-                ok++
-            } catch (e: Exception) {
-                AppLogger.e("Container: failed to install ${entry.pkgId}", e)
-            }
-        }
-        return Result.success(ok)
     }
 
     private fun manifestFileText(path: Path): String =
         FileSystem.SYSTEM.source(path).buffer().use { it.readUtf8() }
-
-    private suspend fun clearCurrent() {
-        AddonManager.modManagersList.toMap().forEach { (_, manager) ->
-            manager.packs.toList().forEach { mod ->
-                runCatching { manager.delete(mod.pkgId) }
-            }
-        }
-        AddonManager.modManagersList.keys.toList().forEach {
-            runCatching { AddonManager.closeModManager(it) }
-        }
-        ModLoaderManager.packs.toList().forEach { loader ->
-            runCatching { ModLoaderManager.delete(loader.pkgId) }
-        }
-    }
-
-    private fun typeOrder(type: String): Int = when (type) {
-        "modloader" -> 0
-        "module" -> 1
-        "plugin" -> 2
-        "mod" -> 3
-        else -> 9
-    }
 }

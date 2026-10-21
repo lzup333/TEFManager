@@ -829,4 +829,22 @@ class LightProtoStore<T>(
         memoryIndex.clear()
         writeBuffer.clear()
     }
+
+    /** 从磁盘重新加载（目录被整体替换后使用）。 */
+    fun reload() {
+        try {
+            indexSaveJob?.cancel()
+            metadataSaveJob?.cancel()
+            memoryIndex.clear()
+            writeBuffer.clear()
+            bufferSize = 0
+            currentDataFileSize =
+                if (fileSystem.exists(dataFilePath)) fileSystem.metadata(dataFilePath).size ?: 0 else 0
+            loadIndex()
+            loadMetadata()
+            AppLogger.i("[$storeName] Database reloaded - Total: ${metadata.totalRecords}")
+        } catch (e: Exception) {
+            AppLogger.e("[$storeName] Failed to reload database", e)
+        }
+    }
 }

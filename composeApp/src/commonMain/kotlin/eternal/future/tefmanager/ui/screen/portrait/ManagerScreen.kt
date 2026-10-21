@@ -97,7 +97,7 @@ object ManagerScreen : Screen, MainScreen.TitledScreen {
             }
         }
 
-        LaunchedEffect(ModLoaderManager.packs) {
+        LaunchedEffect(ModLoaderManager.packs.toList()) {
             AddonManager.refreshModManager(ModLoaderManager.packs)
         }
 
