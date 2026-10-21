@@ -177,6 +177,9 @@ object ModPackManager {
             return@withContext Result.failure(IllegalStateException("SAVE_FAILED"))
         }
 
+        // 切换前把当前存储提交回当前生效容器
+        ModPackStore.saveCurrentIntoActive()
+
         val result = applyZip(zipPath, onProgress)
         if (result.isSuccess) ModPackStore.setActive(saved.id)
         result

@@ -110,10 +110,15 @@ object ModPackStore {
         }.onFailure { AppLogger.e("ModPackStore.refresh failed", it) }
     }
 
-    /** 保证存在一个「初始容器」（尚未导入任何整合包时的存储快照）。 */
+    /** 保证存在一个「默认容器」（尚未导入任何容器时的存储快照）。 */
     suspend fun ensureInitialContainer() {
         refresh()
-        if (packs.any { it.initial }) return
+        val existing = packs.firstOrNull { it.initial }
+        if (existing != null) {
+            // 默认容器始终作为基线；没有记录时把它设为当前生效容器
+            if (activeId == null) setActive(existing.id)
+            return
+        }
 
         val name = StringsResource.Strings.manager.modpack.initial
         val tmp = Platform.getDirectory("tmp") / "initial_container.zip"
@@ -124,9 +129,10 @@ object ModPackStore {
             name = name
         )
 
+        var saved: InstalledModPack? = null
         if (exportResult.isSuccess) {
             val manifest = ModPackManager.readManifest(tmp)
-            if (manifest != null) savePack(manifest, null, tmp, initial = true)
+            if (manifest != null) saved = savePack(manifest, null, tmp, initial = true)
         } else {
             // 当前存储为空：创建一个空容器
             val manifest = ModPackManifest(
@@ -139,10 +145,46 @@ object ModPackStore {
                     json.encodeToString(ModPackManifest.serializer(), manifest).toByteArray()
                 )
             )
-            if (writeZipFile(tmp, items)) savePack(manifest, null, tmp, initial = true)
+            if (writeZipFile(tmp, items)) saved = savePack(manifest, null, tmp, initial = true)
         }
 
+        saved?.let { setActive(it.id) }
         runCatching { if (FileSystem.SYSTEM.exists(tmp)) FileSystem.SYSTEM.delete(tmp) }
+    }
+
+    /**
+     * 把当前存储保存回“当前生效容器”（切换前的提交）。
+     * 这样在默认容器里手动装的 Mod，切走再切回来仍然存在。
+     */
+    suspend fun saveCurrentIntoActive(): Boolean {
+        val id = activeId ?: return false
+        val pack = find(id) ?: return false
+        val tmp = Platform.getDirectory("tmp") / "container_save_active.zip"
+        runCatching { if (FileSystem.SYSTEM.exists(tmp)) FileSystem.SYSTEM.delete(tmp) }
+        return try {
+            val result = ModPackManager.export(tmp, name = pack.manifest.name, author = pack.manifest.author)
+            if (result.isFailure) return false
+
+            val fresh = ModPackManager.readManifest(tmp) ?: return false
+            // 保持原 id/名称/创建时间
+            val merged = fresh.copy(
+                name = pack.manifest.name,
+                author = pack.manifest.author,
+                createdAt = pack.manifest.createdAt
+            )
+            val dir = root / id
+            FileSystem.SYSTEM.sink(dir / "ModPack.json").buffer().use {
+                it.writeUtf8(json.encodeToString(ModPackManifest.serializer(), merged))
+                it.flush()
+            }
+            FileSystem.SYSTEM.copy(tmp, dir / "pack.zip")
+            FileSystem.SYSTEM.delete(tmp)
+            refresh()
+            true
+        } catch (e: Exception) {
+            AppLogger.e("ModPackStore.saveCurrentIntoActive failed", e)
+            false
+        }
     }
 
     fun savePack(
@@ -183,6 +225,8 @@ object ModPackStore {
     suspend fun applyPack(id: String, onProgress: (String) -> Unit = {}): Result<Int> {
         val pack = find(id) ?: return Result.failure(IllegalStateException("NOT_FOUND"))
         val zip = pack.zipPath ?: return Result.failure(IllegalStateException("NO_PACKAGE"))
+        // 切换前把当前存储提交回当前生效容器
+        if (activeId != null && activeId != id) saveCurrentIntoActive()
         val result = ModPackManager.applyZip(zip, onProgress)
         if (result.isSuccess) setActive(id)
         return result
