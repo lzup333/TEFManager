@@ -18,6 +18,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,6 +29,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,12 +46,14 @@ import eternal.future.tefmanager.ui.dialogs.AddonInstallOrUpdateDialog
 import eternal.future.tefmanager.utils.addon.AddonManager
 import eternal.future.tefmanager.utils.addon.ModLoaderManager
 import eternal.future.tefmanager.utils.addon.ModuleManager
+import eternal.future.tefmanager.utils.modpack.ModPackManager
 import eternal.future.tefmanager.utils.openUrl
 import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.nameWithoutExtension
 import io.github.vinceglb.filekit.size
 import io.github.vinceglb.filekit.source
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.io.buffered
 import kotlinx.io.files.SystemFileSystem
@@ -78,14 +83,19 @@ object ModScreen : Screen, MainScreen.TitledScreen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.current
+        val scope = rememberCoroutineScope()
 
         val showInstallDialog = remember { mutableStateOf(false) }
         val installFiles = remember { mutableListOf<Path>() }
+        var busy by remember { mutableStateOf(false) }
+        var busyText by remember { mutableStateOf("") }
 
         val filePickerLauncher = rememberFilePickerLauncher(
             mode = FileKitMode.Multiple(maxItems = 10)
         ) { files ->
             installFiles.clear()
+            val packs = mutableListOf<Path>()
+
             files?.forEach { file ->
                 val tmp = kotlinx.io.files.Path(
                     (Platform.getDirectory("tmp") / "install_tmp" / file.nameWithoutExtension).toString()
@@ -94,10 +104,36 @@ object ModScreen : Screen, MainScreen.TitledScreen {
                 SystemFileSystem.sink(tmp).buffered().use { sink ->
                     sink.write(file.source(), file.size())
                     sink.flush()
-                    installFiles.add(tmp.toString().toPath())
                 }
-                showInstallDialog.value = true
+                val path = tmp.toString().toPath()
+                // 自动识别：整合包 / 普通附加包
+                if (ModPackManager.isModPack(path)) packs.add(path) else installFiles.add(path)
             }
+
+            if (packs.isNotEmpty()) {
+                scope.launch {
+                    busy = true
+                    packs.forEach { pack ->
+                        busyText = Strings.manager.modpack.importing
+                        ModPackManager.import(pack) { name ->
+                            busyText = "${Strings.manager.modpack.importing} $name"
+                        }
+                    }
+                    AddonManager.refreshModManager(ModLoaderManager.packs)
+                    busy = false
+                }
+            }
+
+            if (installFiles.isNotEmpty()) showInstallDialog.value = true
+        }
+
+        if (busy) {
+            AlertDialog(
+                onDismissRequest = {},
+                title = { Text(busyText) },
+                text = { CircularProgressIndicator() },
+                confirmButton = {}
+            )
         }
 
         if (showInstallDialog.value) {

@@ -22,6 +22,7 @@ import androidx.compose.material.icons.rounded.Extension
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material.icons.rounded.Storage
 import androidx.compose.material.icons.rounded.Widgets
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -199,6 +200,12 @@ object MainScreen : Screen {
             selectedIcon = Icons.Rounded.Widgets,
             unselectedIcon = Icons.Outlined.Widgets,
             label = Strings.manager.title
+        ),
+        NavigationItem(
+            screen = ContainerScreen,
+            selectedIcon = Icons.Rounded.Storage,
+            unselectedIcon = Icons.Rounded.Storage,
+            label = Strings.manager.container.title
         )
     )
 
