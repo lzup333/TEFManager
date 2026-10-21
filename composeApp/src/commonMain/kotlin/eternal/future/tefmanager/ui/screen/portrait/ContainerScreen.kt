@@ -42,8 +42,8 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import eternal.future.tefmanager.Platform
 import eternal.future.tefmanager.strings.StringsResource.Strings
 import eternal.future.tefmanager.ui.component.TefActionButton
-import eternal.future.tefmanager.ui.component.TefModernCheckBox
 import eternal.future.tefmanager.ui.component.TefModCard
+import eternal.future.tefmanager.utils.exitApplication
 import eternal.future.tefmanager.utils.modpack.ModPackManager
 import eternal.future.tefmanager.utils.modpack.ModPackStore
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
@@ -85,12 +85,11 @@ object ContainerScreen : Screen, MainScreen.TitledScreen {
         var exportName by remember { mutableStateOf("") }
         var exportIconName by remember { mutableStateOf<String?>(null) }
         var exportIconPath by remember { mutableStateOf<Path?>(null) }
-        var includeLoaders by remember { mutableStateOf(true) }
-        var includeKernel by remember { mutableStateOf(true) }
 
         var busy by remember { mutableStateOf(false) }
         var busyText by remember { mutableStateOf("") }
         var message by remember { mutableStateOf<String?>(null) }
+        var needsRestart by remember { mutableStateOf(false) }
         var pendingDeleteId by remember { mutableStateOf<String?>(null) }
         var pendingExportZip by remember { mutableStateOf<Path?>(null) }
 
@@ -155,7 +154,10 @@ object ContainerScreen : Screen, MainScreen.TitledScreen {
                         busy = false
                         ModPackStore.refresh()
                         result.fold(
-                            onSuccess = { message = Strings.manager.modpack.applySuccess },
+                            onSuccess = {
+                                message = Strings.manager.modpack.applySuccess
+                                needsRestart = true
+                            },
                             onFailure = { e -> message = Strings.manager.modpack.failed(e.message ?: "UNKNOWN") }
                         )
                         runCatching { SystemFileSystem.delete(tmp) }
@@ -253,22 +255,6 @@ object ContainerScreen : Screen, MainScreen.TitledScreen {
                                 }
                             }
                         }
-
-                        TefModernCheckBox(
-                            title = Strings.manager.modpack.includeLoaders,
-                            contentDescription = "",
-                            isChecked = includeLoaders,
-                            onCheckedChange = { includeLoaders = it },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        TefModernCheckBox(
-                            title = Strings.manager.modpack.includeKernel,
-                            contentDescription = "",
-                            isChecked = includeKernel,
-                            onCheckedChange = { includeKernel = it },
-                            modifier = Modifier.fillMaxWidth()
-                        )
                     }
                 },
                 confirmButton = {
@@ -285,8 +271,6 @@ object ContainerScreen : Screen, MainScreen.TitledScreen {
                                     destZip = out,
                                     name = name,
                                     iconSource = exportIconPath,
-                                    includeLoaders = includeLoaders,
-                                    includeKernel = includeKernel,
                                     onProgress = { n -> busyText = "${Strings.manager.modpack.exporting} $n" }
                                 )
                                 busy = false
@@ -356,10 +340,26 @@ object ContainerScreen : Screen, MainScreen.TitledScreen {
             AlertDialog(
                 onDismissRequest = { message = null },
                 title = { Text(Strings.manager.container.title) },
-                text = { Text(msg) },
+                text = {
+                    Text(
+                        if (needsRestart) "$msg\n\n${Strings.manager.modpack.restartNeeded}" else msg
+                    )
+                },
                 confirmButton = {
-                    TextButton(onClick = { message = null }) { Text(Strings.confirm) }
-                }
+                    if (needsRestart) {
+                        TextButton(onClick = {
+                            message = null
+                            exitApplication()
+                        }) { Text(Strings.manager.modpack.restart) }
+                    } else {
+                        TextButton(onClick = { message = null }) { Text(Strings.confirm) }
+                    }
+                },
+                dismissButton = if (needsRestart) {
+                    {
+                        TextButton(onClick = { message = null }) { Text(Strings.cancel) }
+                    }
+                } else null
             )
         }
     }

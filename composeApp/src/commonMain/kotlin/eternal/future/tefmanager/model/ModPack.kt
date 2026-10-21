@@ -20,6 +20,8 @@ data class ModPackManifest(
     val iconEntry: String? = null,
     val kernelEntry: String? = null,
     val kernelVersion: String? = null,
+    /** true 表示整目录快照（直接还原目录），false 为旧的按包安装格式。 */
+    val fullSnapshot: Boolean = false,
     val entries: List<ModPackEntry> = emptyList()
 )
 

@@ -17,8 +17,6 @@ import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -211,49 +209,6 @@ fun TefSwitchItem(
         Switch(
             checked = checked,
             onCheckedChange = onCheckedChange
-        )
-    }
-}
-
-@Composable
-fun TefModernCheckBox(
-    modifier: Modifier = Modifier,
-    icon: ImageVector? = null,
-    title: String,
-    contentDescription: String,
-    isChecked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
-) {
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            if (icon != null) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-            Column {
-                Text(text = title, style = MaterialTheme.typography.titleMedium)
-                if (contentDescription.isNotEmpty()) {
-                    Text(text = contentDescription, style = MaterialTheme.typography.bodySmall)
-                }
-            }
-        }
-        Checkbox(
-            checked = isChecked,
-            onCheckedChange = onCheckedChange,
-            colors = CheckboxDefaults.colors(
-                uncheckedColor = MaterialTheme.colorScheme.outline
-            ),
-            modifier = Modifier.padding(start = 16.dp)
         )
     }
 }

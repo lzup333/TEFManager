@@ -87,9 +87,7 @@ object ModPackStore {
 
         val exportResult = ModPackManager.export(
             destZip = tmp,
-            name = name,
-            includeLoaders = true,
-            includeKernel = true
+            name = name
         )
 
         if (exportResult.isSuccess) {

@@ -36,6 +36,7 @@ import eternal.future.tefmanager.ui.component.TefLoaderCard
 import eternal.future.tefmanager.ui.component.TefModCard
 import eternal.future.tefmanager.utils.addon.AddonManager
 import eternal.future.tefmanager.utils.addon.ModLoaderManager
+import eternal.future.tefmanager.utils.exitApplication
 import eternal.future.tefmanager.utils.modpack.ModPackStore
 import kotlinx.coroutines.launch
 import okio.Path
@@ -60,6 +61,7 @@ class ModPackDetailScreen(
         var busy by remember { mutableStateOf(false) }
         var busyText by remember { mutableStateOf("") }
         var message by remember { mutableStateOf<String?>(null) }
+        var needsRestart by remember { mutableStateOf(false) }
         var showDeleteConfirm by remember { mutableStateOf(false) }
 
         val pack = ModPackStore.find(packId)
@@ -94,7 +96,10 @@ class ModPackDetailScreen(
                                 }
                                 busy = false
                                 result.fold(
-                                    onSuccess = { message = Strings.manager.modpack.applySuccess },
+                                    onSuccess = {
+                                        message = Strings.manager.modpack.applySuccess
+                                        needsRestart = true
+                                    },
                                     onFailure = { e ->
                                         message = Strings.manager.modpack.failed(e.message ?: "UNKNOWN")
                                     }
@@ -186,10 +191,26 @@ class ModPackDetailScreen(
             AlertDialog(
                 onDismissRequest = { message = null },
                 title = { Text(Strings.manager.modpack.title) },
-                text = { Text(msg) },
+                text = {
+                    Text(
+                        if (needsRestart) "$msg\n\n${Strings.manager.modpack.restartNeeded}" else msg
+                    )
+                },
                 confirmButton = {
-                    TextButton(onClick = { message = null }) { Text(Strings.confirm) }
-                }
+                    if (needsRestart) {
+                        TextButton(onClick = {
+                            message = null
+                            exitApplication()
+                        }) { Text(Strings.manager.modpack.restart) }
+                    } else {
+                        TextButton(onClick = { message = null }) { Text(Strings.confirm) }
+                    }
+                },
+                dismissButton = if (needsRestart) {
+                    {
+                        TextButton(onClick = { message = null }) { Text(Strings.cancel) }
+                    }
+                } else null
             )
         }
     }
