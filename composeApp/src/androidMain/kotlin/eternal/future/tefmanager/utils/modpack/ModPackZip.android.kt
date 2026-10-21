@@ -14,14 +14,19 @@ import java.util.zip.ZipOutputStream
  * TEFManager - ModPackZip (Android)
  *******************************************************************************/
 
-actual fun writeZipFile(zipPath: Path, items: List<ZipWriteItem>): Boolean {
+actual fun writeZipFile(
+    zipPath: Path,
+    items: List<ZipWriteItem>,
+    onProgress: ((done: Int, total: Int) -> Unit)?
+): Boolean {
     return try {
         zipPath.parent?.let { FileSystem.SYSTEM.createDirectories(it) }
         val file = zipPath.toString().let { File(it) }
         file.parentFile?.mkdirs()
+        val total = items.size
 
         ZipOutputStream(file.outputStream().buffered()).use { zos ->
-            items.forEach { item ->
+            items.forEachIndexed { index, item ->
                 when (item) {
                     is ZipWriteItem.Bytes -> {
                         zos.putNextEntry(ZipEntry(item.entry))
@@ -38,6 +43,7 @@ actual fun writeZipFile(zipPath: Path, items: List<ZipWriteItem>): Boolean {
                         }
                     }
                 }
+                onProgress?.invoke(index + 1, total)
             }
         }
         true

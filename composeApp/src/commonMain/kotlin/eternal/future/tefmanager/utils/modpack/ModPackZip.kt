@@ -13,6 +13,10 @@ sealed class ZipWriteItem {
     data class FileCopy(val entry: String, val source: Path) : ZipWriteItem()
 }
 
-expect fun writeZipFile(zipPath: Path, items: List<ZipWriteItem>): Boolean
+expect fun writeZipFile(
+    zipPath: Path,
+    items: List<ZipWriteItem>,
+    onProgress: ((done: Int, total: Int) -> Unit)? = null
+): Boolean
 
 expect fun extractZipFile(zipPath: Path, destDir: Path): Boolean

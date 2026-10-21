@@ -65,7 +65,6 @@ object ModPackManager {
             snapshotDirs.forEach { root ->
                 val dir = Platform.getData(root)
                 if (FileSystem.SYSTEM.exists(dir)) {
-                    onProgress(root)
                     count += addDirectoryToZip(dir, root, items)
                 }
             }
@@ -98,7 +97,9 @@ object ModPackManager {
                 items += ZipWriteItem.FileCopy("icon.png", iconSource)
             }
 
-            val ok = writeZipFile(destZip, items)
+            val ok = writeZipFile(destZip, items) { done, total ->
+                onProgress("$done/$total")
+            }
             if (!ok) Result.failure(IllegalStateException("WRITE_FAILED")) else Result.success(count)
         } catch (e: Exception) {
             AppLogger.e("Container export failed", e)
