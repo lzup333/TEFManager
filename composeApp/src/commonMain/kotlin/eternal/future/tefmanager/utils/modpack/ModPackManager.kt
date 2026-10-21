@@ -4,6 +4,7 @@ import eternal.future.tefmanager.ConfigurationState
 import eternal.future.tefmanager.Platform
 import eternal.future.tefmanager.model.ModPackManifest
 import eternal.future.tefmanager.utils.AppLogger
+import eternal.future.tefmanager.utils.ConfigManager
 import eternal.future.tefmanager.utils.addon.AddonManager
 import eternal.future.tefmanager.utils.addon.ModLoaderManager
 import eternal.future.tefmanager.utils.addon.ModuleManager
@@ -81,9 +82,7 @@ object ModPackManager {
                 name = name,
                 author = author,
                 createdAt = Clock.System.now().toEpochMilliseconds(),
-                iconEntry = if (iconSource != null && FileSystem.SYSTEM.exists(iconSource)) "icon.png" else null,
                 kernelVersion = ConfigurationState.kernelVersion,
-                fullSnapshot = true,
                 fileCount = count
             )
 
@@ -257,6 +256,12 @@ object ModPackManager {
                 fs.copy(configSrc, configDst)
             }
             count++
+            // 避免还原旧配置后重新触发引导
+            runCatching {
+                val cfg = ConfigManager.getInstance()
+                cfg.loadConfig()
+                cfg.updateConfig { it.initialized = true }
+            }
         }
 
         // 热重载管理器，免重启生效

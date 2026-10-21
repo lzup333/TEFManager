@@ -17,8 +17,6 @@ data class ModPackManifest(
     val author: String = "",
     val version: String = "1.0.0",
     val createdAt: Long = 0L,
-    val iconEntry: String? = null,
     val kernelVersion: String? = null,
-    val fullSnapshot: Boolean = true,
     val fileCount: Int = 0
 )

@@ -46,6 +46,7 @@ import eternal.future.tefmanager.strings.StringsResource.Strings
 import eternal.future.tefmanager.ui.component.TefActionButton
 import eternal.future.tefmanager.ui.component.TefModernCheckBox
 import eternal.future.tefmanager.ui.component.TefModCard
+import eternal.future.tefmanager.utils.exitApplication
 import eternal.future.tefmanager.utils.modpack.ModPackBackup
 import eternal.future.tefmanager.utils.modpack.ModPackManager
 import eternal.future.tefmanager.utils.modpack.ModPackStore
@@ -92,6 +93,7 @@ object ContainerScreen : Screen, MainScreen.TitledScreen {
         var busy by remember { mutableStateOf(false) }
         var busyText by remember { mutableStateOf("") }
         var message by remember { mutableStateOf<String?>(null) }
+        var needsRestart by remember { mutableStateOf(false) }
         var pendingDeleteId by remember { mutableStateOf<String?>(null) }
         var showClearBackupsConfirm by remember { mutableStateOf(false) }
         var pendingExportZip by remember { mutableStateOf<Path?>(null) }
@@ -159,6 +161,7 @@ object ContainerScreen : Screen, MainScreen.TitledScreen {
                         result.fold(
                             onSuccess = {
                                 message = Strings.manager.modpack.applySuccess
+                                needsRestart = true
                             },
                             onFailure = { e -> message = Strings.manager.modpack.failed(e.message ?: "UNKNOWN") }
                         )
@@ -179,7 +182,10 @@ object ContainerScreen : Screen, MainScreen.TitledScreen {
                 }
                 busy = false
                 result.fold(
-                    onSuccess = { message = Strings.manager.modpack.applySuccess },
+                    onSuccess = {
+                        message = Strings.manager.modpack.applySuccess
+                        needsRestart = true
+                    },
                     onFailure = { e -> message = Strings.manager.modpack.failed(e.message ?: "UNKNOWN") }
                 )
             }
@@ -233,7 +239,7 @@ object ContainerScreen : Screen, MainScreen.TitledScreen {
 
                 items(ModPackStore.packs, key = { it.id }) { pack ->
                     TefModCard(
-                        name = pack.manifest.name,
+                        name = if (pack.initial) Strings.manager.modpack.initial else pack.manifest.name,
                         version = pack.manifest.version,
                         description = Strings.manager.modpack.snapshotSummary(pack.manifest.fileCount),
                         iconPath = pack.iconPath,
@@ -404,10 +410,24 @@ object ContainerScreen : Screen, MainScreen.TitledScreen {
             AlertDialog(
                 onDismissRequest = { message = null },
                 title = { Text(Strings.manager.container.title) },
-                text = { Text(msg) },
+                text = {
+                    Text(if (needsRestart) "$msg\n\n${Strings.manager.modpack.restartNeeded}" else msg)
+                },
                 confirmButton = {
-                    TextButton(onClick = { message = null }) { Text(Strings.confirm) }
-                }
+                    if (needsRestart) {
+                        TextButton(onClick = {
+                            message = null
+                            exitApplication()
+                        }) { Text(Strings.manager.modpack.restart) }
+                    } else {
+                        TextButton(onClick = { message = null }) { Text(Strings.confirm) }
+                    }
+                },
+                dismissButton = if (needsRestart) {
+                    {
+                        TextButton(onClick = { message = null }) { Text(Strings.cancel) }
+                    }
+                } else null
             )
         }
     }
