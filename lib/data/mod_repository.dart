@@ -49,11 +49,9 @@ class ModRepositoryService {
         }
       }
     }
-    final list = entries.values.toList()
-      ..sort(
-        (a, b) => a.mod.name.toLowerCase().compareTo(b.mod.name.toLowerCase()),
-      );
-    return list;
+    // Keep the order defined by the repository index (loader order, then the
+    // order inside each index). Updating a duplicate keeps its first position.
+    return entries.values.toList();
   }
 
   Future<ModRepositoryIndex?> _fetchIndex(ModLoaderItem loader) async {

@@ -494,9 +494,10 @@ class _ManagerScreenState extends State<ManagerScreen> {
                   ),
                   const SizedBox(width: 8),
                   installed
-                      ? const MetaChip(
-                          label: 'Installed',
-                          tone: ChipTone.success,
+                      ? Text(
+                          tr('store.installed'),
+                          style: Theme.of(context).textTheme.labelMedium
+                              ?.copyWith(color: scheme.primary),
                         )
                       : FilledButton.tonal(
                           onPressed: () =>
@@ -520,9 +521,6 @@ class _ManagerScreenState extends State<ManagerScreen> {
                   mod.pkgId,
                   if (mod.fileSize > 0) formatBytes(mod.fileSize),
                   storeEntry.loaderName,
-                  if (mod.experimental) tr('manager.mod.experimental'),
-                  if (mod.deprecated) tr('manager.mod.deprecated'),
-                  if (mod.stableVerified) tr('manager.mod.verified'),
                 ].join('  ·  '),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -587,7 +585,6 @@ class _ManagerScreenState extends State<ManagerScreen> {
           ? mod.brieflyDescribe
           : mod.description,
       detailsURL: mod.detailsURL,
-      features: mod.features.map(_featureLabel).toList(),
       extra: [
         _Info(tr('store.source'), entry.loaderName),
         if (mod.fileSize > 0)

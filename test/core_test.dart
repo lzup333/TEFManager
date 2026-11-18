@@ -10,6 +10,9 @@ import 'package:tefmanager/data/component_store.dart';
 import 'package:tefmanager/data/resource_pack_store.dart';
 import 'package:tefmanager/data/mod_settings_store.dart';
 import 'package:archive/archive.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
+import 'package:tefmanager/data/mod_repository.dart';
 
 void main() {
   test('version comparison follows the Kotlin implementation', () {
@@ -86,6 +89,7 @@ void main() {
   _storageTests();
   _installTests();
   _settingsTests();
+  _storeTests();
 }
 
 // ---------------------------------------------------------------------------
@@ -107,7 +111,11 @@ void _storageTests() {
     ]);
 
     final data = await File('${dir.path}/db/data.bin').readAsBytes();
-    final firstLength = ByteData.sublistView(data, 0, 4).getInt32(0, Endian.big);
+    final firstLength = ByteData.sublistView(
+      data,
+      0,
+      4,
+    ).getInt32(0, Endian.big);
     expect(firstLength, greaterThan(0));
     expect(await File('${dir.path}/db/index.bin').exists(), isTrue);
     expect(await File('${dir.path}/db/meta.bin').exists(), isTrue);
@@ -124,7 +132,10 @@ void _storageTests() {
     await list.enable('a.one');
     await list.enable('a.two');
     await list.enable('a.one');
-    expect(await File('${dir.path}/enables.txt').readAsString(), 'a.one\na.two\n');
+    expect(
+      await File('${dir.path}/enables.txt').readAsString(),
+      'a.one\na.two\n',
+    );
     await list.disable('a.one');
     expect(await list.read(), {'a.two'});
     await dir.delete(recursive: true);
@@ -135,10 +146,18 @@ void _installTests() {
   test('installs a .tefpkg into the official directory layout', () async {
     final dir = await Directory.systemTemp.createTemp('tefinstall');
     final archive = Archive()
-      ..add(ArchiveFile.string('Manifest.json',
-          '{"type":"module","file":"payload/module.json","iconFile":"Icon.png","resources":"res/"}'))
-      ..add(ArchiveFile.string('Info.json',
-          '{"pkgId":"test.module","name":"Test Module","version":"1.0","versionCode":3}'))
+      ..add(
+        ArchiveFile.string(
+          'Manifest.json',
+          '{"type":"module","file":"payload/module.json","iconFile":"Icon.png","resources":"res/"}',
+        ),
+      )
+      ..add(
+        ArchiveFile.string(
+          'Info.json',
+          '{"pkgId":"test.module","name":"Test Module","version":"1.0","versionCode":3}',
+        ),
+      )
       ..add(ArchiveFile.string('payload/module.json', '{"ok":true}'))
       ..add(ArchiveFile.bytes('Icon.png', [1, 2, 3]))
       ..add(ArchiveFile.string('res/config.txt', 'hello'));
@@ -149,10 +168,18 @@ void _installTests() {
     expect(result.success, isTrue, reason: result.error);
     expect(result.pkgId, 'test.module');
 
-    expect(await File('${dir.path}/module/pkg/test.module.tefpkg').exists(), isTrue);
-    expect(await File('${dir.path}/module/icons/test.module.icon').exists(), isTrue);
     expect(
-      await File('${dir.path}/module/private/test.module/config.txt').readAsString(),
+      await File('${dir.path}/module/pkg/test.module.tefpkg').exists(),
+      isTrue,
+    );
+    expect(
+      await File('${dir.path}/module/icons/test.module.icon').exists(),
+      isTrue,
+    );
+    expect(
+      await File(
+        '${dir.path}/module/private/test.module/config.txt',
+      ).readAsString(),
       'hello',
     );
 
@@ -167,7 +194,10 @@ void _installTests() {
     await store.delete(AddonKind.module, 'test.module');
     snapshot = await store.load();
     expect(snapshot.modules, isEmpty);
-    expect(await File('${dir.path}/module/pkg/test.module.tefpkg').exists(), isFalse);
+    expect(
+      await File('${dir.path}/module/pkg/test.module.tefpkg').exists(),
+      isFalse,
+    );
 
     await dir.delete(recursive: true);
   });
@@ -175,8 +205,12 @@ void _installTests() {
   test('installs a language resource pack and writes config.json', () async {
     final dir = await Directory.systemTemp.createTemp('tefpack');
     final archive = Archive()
-      ..add(ArchiveFile.string('pack_info.json',
-          '{"name":"Test Lang","author":"Me","version":"1.2","type":"languagepack"}'))
+      ..add(
+        ArchiveFile.string(
+          'pack_info.json',
+          '{"name":"Test Lang","author":"Me","version":"1.2","type":"languagepack"}',
+        ),
+      )
       ..add(ArchiveFile.bytes('Icon.png', [9, 9, 9]));
     final bytes = ZipEncoder().encodeBytes(archive);
 
@@ -187,7 +221,9 @@ void _installTests() {
     expect(item.packType, PackType.language);
     expect(item.name, 'Test Lang');
     expect(
-      await File('${dir.path}/module/private/eternal.future.languagepackextension/language_packs/${item.fileName}').exists(),
+      await File(
+        '${dir.path}/module/private/eternal.future.languagepackextension/language_packs/${item.fileName}',
+      ).exists(),
       isTrue,
     );
 
@@ -210,7 +246,11 @@ void _installTests() {
 void _settingsTests() {
   test('mod settings use the official config.json schema', () async {
     final dir = await Directory.systemTemp.createTemp('tefmodsettings');
-    await ModSettingsStore.write(dir, {'speed': 3, 'enabled': true, 'name': 'x'});
+    await ModSettingsStore.write(dir, {
+      'speed': 3,
+      'enabled': true,
+      'name': 'x',
+    });
     final raw = await File('${dir.path}/config.json').readAsString();
     expect(raw.contains('"schemaVersion": 1'), isTrue);
     final values = await ModSettingsStore.read(dir);
@@ -218,5 +258,48 @@ void _settingsTests() {
     expect(values['enabled'], isTrue);
     expect(values['name'], 'x');
     await dir.delete(recursive: true);
+  });
+}
+
+void _storeTests() {
+  test('mod repository keeps the index order', () async {
+    final client = MockClient((request) async {
+      final url = request.url.toString();
+      if (url.contains('one')) {
+        return http.Response(
+          '{"loaderMinVersionCode":0,"mods":['
+          '{"pkgId":"b","name":"Zeta","versionCode":1},'
+          '{"pkgId":"a","name":"Alpha","versionCode":1}]}',
+          200,
+        );
+      }
+      return http.Response(
+        '{"loaderMinVersionCode":0,"mods":['
+        '{"pkgId":"c","name":"Beta","versionCode":1},'
+        '{"pkgId":"a","name":"Alpha","versionCode":2}]}',
+        200,
+      );
+    });
+    final service = ModRepositoryService(client: client);
+    final entries = await service.fetch(
+      const [
+        ModLoaderItem(
+          pkgId: 'loader.one',
+          name: 'One',
+          versionCode: 10,
+          modRepositoryIndexUrl: 'https://example.com/one.json',
+        ),
+        ModLoaderItem(
+          pkgId: 'loader.two',
+          name: 'Two',
+          versionCode: 10,
+          modRepositoryIndexUrl: 'https://example.com/two.json',
+        ),
+      ],
+      enabledLoaderIds: const {'loader.one', 'loader.two'},
+    );
+    expect(entries.map((e) => e.mod.pkgId).toList(), ['b', 'a', 'c']);
+    // The duplicate keeps its first position but uses the newer version.
+    expect(entries[1].mod.versionCode, 2);
   });
 }
