@@ -29,7 +29,39 @@ TEFManager 是 [TEFKernel](https://github.com/eternalfuture-e38299/TEFKernel) �
 
 ## 🚀 构建
 
-需要 Flutter **3.50+**（Dart 3.14）与 Android SDK 36/37。
+### 环境要求
+
+| 依赖 | 版本 / 说明 |
+|---|---|
+| Flutter | 3.50+（Dart 3.14），`flutter --version` 可查 |
+| JDK | 17 |
+| Android SDK | platform 37 + build-tools 37（缺会自动提示安装） |
+| Android NDK | 使用 Flutter 默认 NDK 版本 |
+
+首次使用先确认：
+
+```bash
+flutter doctor
+flutter config --android-sdk /path/to/Android/Sdk
+yes | flutter doctor --android-licenses
+```
+
+### 一条命令构建
+
+仓库自带脚本（会先跑 analyze + test，再打 release 包）：
+
+```bash
+./scripts/build_android.sh
+```
+
+其他模式：
+
+```bash
+./scripts/build_android.sh --debug          # debug APK
+./scripts/build_android.sh --split-per-abi  # 按 ABI 拆分，体积更小
+```
+
+### 手动构建
 
 ```bash
 flutter pub get
@@ -38,9 +70,42 @@ flutter test
 flutter build apk --release
 ```
 
-产物：`build/app/outputs/flutter-apk/app-release.apk`
+产物：
 
-CI 见 `.github/workflows/build.yml`，只构建 Android APK。
+```
+build/app/outputs/flutter-apk/app-release.apk
+```
+
+安装到设备：
+
+```bash
+adb install -r build/app/outputs/flutter-apk/app-release.apk
+```
+
+### 签名
+
+Release 构建自动使用仓库内的官方签名文件：
+
+```
+android/app/tefmanager.p12   (alias: TEFManager)
+```
+
+与官方版证书一致，可直接覆盖安装、在两个版本之间切换。
+Debug 构建使用 Flutter 默认 debug 签名，不能覆盖官方版。
+
+### 网络 / 代理
+
+Gradle 首次构建需要下载依赖。如果直连失败，可设置代理后再构建：
+
+```bash
+export HTTP_PROXY=http://127.0.0.1:7890
+./scripts/build_android.sh
+```
+
+### CI
+
+`.github/workflows/build.yml` 只构建 Android APK；支持 `workflow_dispatch`
+和 `v*` tag 触发。若仓库没有提供 `KEYSTORE_BASE64` secret，CI 会生成临时签名。
 
 ## 📂 目录
 
