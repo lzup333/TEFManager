@@ -2,9 +2,8 @@
 # Build the Android-only TEFManager Flutter app.
 #
 # Usage:
-#   scripts/build_android.sh                 # analyze + test + release APK
-#   scripts/build_android.sh --debug         # debug APK
-#   scripts/build_android.sh --split-per-abi # one APK per ABI
+#   scripts/build_android.sh          # analyze + test + release APK (arm64 only)
+#   scripts/build_android.sh --debug  # debug APK (arm64 only)
 #
 # Optional environment variables:
 #   FLUTTER_BIN   flutter executable (default: flutter from PATH)
@@ -48,15 +47,11 @@ fi
 
 if [ "${1:-}" = "--debug" ]; then
   shift || true
-  echo "==> flutter build apk --debug"
-  "$FLUTTER_BIN" build apk --debug "$@"
-elif [ "${1:-}" = "--split-per-abi" ]; then
-  shift || true
-  echo "==> flutter build apk --release --split-per-abi"
-  "$FLUTTER_BIN" build apk --release --split-per-abi "$@"
+  echo "==> flutter build apk --debug --target-platform android-arm64"
+  "$FLUTTER_BIN" build apk --debug --target-platform android-arm64 "$@"
 else
-  echo "==> flutter build apk --release"
-  "$FLUTTER_BIN" build apk --release "$@"
+  echo "==> flutter build apk --release --target-platform android-arm64"
+  "$FLUTTER_BIN" build apk --release --target-platform android-arm64 "$@"
 fi
 
 echo

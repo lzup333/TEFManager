@@ -20,6 +20,11 @@ android {
         targetSdk = 37
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // This branch ships arm64 only; no arm32 / x86 / x86_64 builds.
+        ndk {
+            abiFilters += listOf("arm64-v8a")
+        }
     }
 
     signingConfigs {
@@ -39,6 +44,15 @@ android {
     }
 
     packaging {
+        jniLibs {
+            // Keep the release package arm64-only even when a dependency ships
+            // prebuilt libraries for other ABIs.
+            excludes += setOf(
+                "lib/armeabi-v7a/**",
+                "lib/x86/**",
+                "lib/x86_64/**",
+            )
+        }
         resources {
             excludes += setOf(
                 "META-INF/LICENSE.md",

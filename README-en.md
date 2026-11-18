@@ -24,10 +24,10 @@ This branch (`release/flutter`) rewrites the UI in **Flutter** and keeps
 
 | Platform | Architectures | Status |
 |---|---|---|
-| Android | arm64-v8a, armeabi-v7a, x86, x86_64 | ✅ Only supported platform |
+| Android | **arm64-v8a** | ✅ Only build target |
 | Windows / Linux / macOS / iOS | — | ❌ Removed in this branch |
 
-Minimum Android version: **7.0 (API 24)**.
+Minimum Android version: **7.0 (API 24)**; 64-bit ARM devices only.
 
 ## 🚀 Build
 
@@ -37,7 +37,7 @@ Requires Flutter **3.50+** (Dart 3.14) and Android SDK 36/37.
 flutter pub get
 flutter analyze
 flutter test
-flutter build apk --release
+flutter build apk --release --target-platform android-arm64
 ```
 
 Output: `build/app/outputs/flutter-apk/app-release.apk`

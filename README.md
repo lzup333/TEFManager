@@ -22,10 +22,10 @@ TEFManager 是 [TEFKernel](https://github.com/eternalfuture-e38299/TEFKernel) �
 
 | 平台 | 架构 | 状态 |
 |---|---|---|
-| Android | arm64-v8a, armeabi-v7a, x86, x86_64 | ✅ 唯一支持平台 |
+| Android | **arm64-v8a** | ✅ 唯一构建目标 |
 | Windows / Linux / macOS / iOS | — | ❌ 本分支已移除 |
 
-最低 Android 版本：**7.0 (API 24)**。
+最低 Android 版本：**7.0 (API 24)**；仅支持 64 位 ARM 设备。
 
 ## 🚀 构建
 
@@ -57,9 +57,10 @@ yes | flutter doctor --android-licenses
 其他模式：
 
 ```bash
-./scripts/build_android.sh --debug          # debug APK
-./scripts/build_android.sh --split-per-abi  # 按 ABI 拆分，体积更小
+./scripts/build_android.sh --debug   # debug APK
 ```
+
+> 本分支只构建 **arm64-v8a**，不再产出 armeabi-v7a / x86 / x86_64。
 
 ### 手动构建
 
@@ -67,7 +68,7 @@ yes | flutter doctor --android-licenses
 flutter pub get
 flutter analyze
 flutter test
-flutter build apk --release
+flutter build apk --release --target-platform android-arm64
 ```
 
 产物：
