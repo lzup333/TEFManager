@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">TEFManager</string>
+    <string name="file_service_channel_name">TEFLoader File Service</string>
+    <string name="file_service_channel_desc">Keeps the file bridge available to the patched game</string>
+    <string name="file_service_notification_title">TEFManager</string>
+    <string name="file_service_notification_text">File bridge is running for the patched game</string>
+</resources>

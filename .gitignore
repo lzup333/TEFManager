@@ -1,16 +1,14 @@
-# Gradle files
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+
+# Gradle / Android
 .gradle/
 .kotlin/
-build/
-release/
-
-# Local configuration file (sdk path, etc)
 local.properties
-
-# Log/OS Files
-*.log
-
-# Android Studio generated files and folders
 captures/
 .externalNativeBuild/
 .cxx/
@@ -18,25 +16,18 @@ captures/
 *.apk
 output-metadata.json
 
-# IntelliJ
+# IDE
 *.iml
 .idea/
 misc.xml
 deploymentTargetDropDown.xml
 render.experimental.xml
 
-# Keystore files
+# OS / logs
+*.log
+.DS_Store
+
+# Secrets
 *.jks
 *.keystore
-*.p12
-
-# Google Services (e.g. APIs or Firebase)
 google-services.json
-
-# Android Profiling
-*.hprof
-
-# Terraria resourse
-composeApp/src/androidMain/resources/assets
-composeApp/src/androidMain/jniLibs/
-composeApp/libs/android/terraria.jar
