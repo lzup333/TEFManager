@@ -54,6 +54,26 @@ else
   "$FLUTTER_BIN" build apk --release --target-platform android-arm64 "$@"
 fi
 
+APK="build/app/outputs/flutter-apk/app-release.apk"
+if [ "${1:-}" = "--debug" ] || [ ! -f "$APK" ]; then
+  APK="build/app/outputs/flutter-apk/app-debug.apk"
+fi
+
+# R8 must not strip the Xposed entry point referenced by assets/xposed_init.
+if command -v unzip >/dev/null 2>&1 && [ -f "$APK" ]; then
+  found=0
+  for dex in $(unzip -Z1 "$APK" | grep -E '^classes[0-9]*\.dex$'); do
+    if unzip -p "$APK" "$dex" | grep -aq 'eternal.future.tefmanager.MainHook'; then
+      found=1
+      break
+    fi
+  done
+  if [ "$found" -ne 1 ]; then
+    echo "ERROR: MainHook missing from $APK (R8 keep rules broken?)" >&2
+    exit 1
+  fi
+fi
+
 echo
 echo "Output:"
 ls -lh build/app/outputs/flutter-apk/*.apk || true
