@@ -141,18 +141,18 @@ class BundledInstaller {
         if (existing.isNotEmpty &&
             assetVersion != null &&
             !_isNewer(assetVersion, existing.first.version)) {
-          steps.add(BundledStep(
-            name: module.label,
-            success: true,
-            skipped: true,
-          ));
+          steps.add(
+            BundledStep(name: module.label, success: true, skipped: true),
+          );
         } else {
           final result = await store.installBytes(bytes);
-          steps.add(BundledStep(
-            name: module.label,
-            success: result.success,
-            error: result.error,
-          ));
+          steps.add(
+            BundledStep(
+              name: module.label,
+              success: result.success,
+              error: result.error,
+            ),
+          );
         }
       } catch (e) {
         steps.add(BundledStep(name: module.label, success: false, error: '$e'));
@@ -177,8 +177,9 @@ class BundledInstaller {
 }
 
 /// Convenience for callers that only need the list of component names.
-List<String> get bundledModuleLabels =>
-    [for (final m in bundledModules) m.label];
+List<String> get bundledModuleLabels => [
+  for (final m in bundledModules) m.label,
+];
 
 /// Kept for potential migration of legacy databases.
 Future<List<ModuleItem>> readModuleDatabase(Directory dataDir) async {

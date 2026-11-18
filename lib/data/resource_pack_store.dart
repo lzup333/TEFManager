@@ -112,8 +112,8 @@ class ResourcePackStore {
   }
 
   File configFile(PackType type) => File(
-        '${dataDir.path}/module/private/${_config(type).moduleId}/${_config(type).configName}',
-      );
+    '${dataDir.path}/module/private/${_config(type).moduleId}/${_config(type).configName}',
+  );
 
   File iconFile(PackType type, String packId) =>
       File('${packsDir(type).path}/icons/$packId.png');
@@ -122,11 +122,11 @@ class ResourcePackStore {
       File('${packsDir(type).path}/$fileName');
 
   LightStore<ResourcesPackItem> _store(PackType type) => LightStore(
-        directory: Directory('${packsDir(type).path}/db'),
-        encode: encodeResourcePack,
-        decode: decodeResourcePack,
-        keyOf: (v) => v.fileName,
-      );
+    directory: Directory('${packsDir(type).path}/db'),
+    encode: encodeResourcePack,
+    decode: decodeResourcePack,
+    keyOf: (v) => v.fileName,
+  );
 
   Future<ResourcePackSnapshot> load() async {
     final packs = <PackType, List<ResourcesPackItem>>{};
@@ -145,7 +145,9 @@ class ResourcePackStore {
             .map((c) => c.file)
             .toSet();
         // Keep the list order aligned with the config file.
-        final order = {for (var i = 0; i < configs.length; i++) configs[i].file: i};
+        final order = {
+          for (var i = 0; i < configs.length; i++) configs[i].file: i,
+        };
         items.sort((a, b) {
           final ai = order[a.fileName] ?? 1 << 30;
           final bi = order[b.fileName] ?? 1 << 30;
@@ -185,12 +187,14 @@ class ResourcePackStore {
       }
     }
     if (!changed) {
-      configs.add(_PackConfig(
-        file: pack.fileName,
-        enable: enabled,
-        priority: configs.length,
-        type: pack.type == PackOrigin.terraria ? 0 : 1,
-      ));
+      configs.add(
+        _PackConfig(
+          file: pack.fileName,
+          enable: enabled,
+          priority: configs.length,
+          type: pack.type == PackOrigin.terraria ? 0 : 1,
+        ),
+      );
     }
     await _writeConfigs(type, configs);
   }
@@ -284,7 +288,8 @@ class ResourcePackStore {
     await File('${dir.path}/$fileName').writeAsBytes(bytes, flush: true);
 
     onProgress?.call('icon');
-    final iconEntry = _entry(archive, 'Icon.png') ?? _entry(archive, 'icon.png');
+    final iconEntry =
+        _entry(archive, 'Icon.png') ?? _entry(archive, 'icon.png');
     String iconPath = '';
     if (iconEntry != null) {
       final target = iconFile(type, packId);
@@ -313,12 +318,14 @@ class ResourcePackStore {
     if (type != PackType.font) {
       final configs = await _readConfigs(type);
       if (!configs.any((c) => c.file == fileName)) {
-        configs.add(_PackConfig(
-          file: fileName,
-          enable: false,
-          priority: configs.length,
-          type: info.origin == PackOrigin.terraria ? 0 : 1,
-        ));
+        configs.add(
+          _PackConfig(
+            file: fileName,
+            enable: false,
+            priority: configs.length,
+            type: info.origin == PackOrigin.terraria ? 0 : 1,
+          ),
+        );
         await _writeConfigs(type, configs);
       }
     }
@@ -328,7 +335,10 @@ class ResourcePackStore {
   }
 
   PackType? _detectType(Archive archive) {
-    final names = archive.files.where((e) => e.isFile).map((e) => e.name).toList();
+    final names = archive.files
+        .where((e) => e.isFile)
+        .map((e) => e.name)
+        .toList();
     bool hasDir(String dir) =>
         names.any((name) => name == dir || name.startsWith('$dir/'));
 
@@ -352,9 +362,9 @@ class ResourcePackStore {
     final entry = _entry(archive, 'pack_info.json');
     if (entry == null) return null;
     try {
-      final map = (jsonDecode(utf8.decode(entry.content, allowMalformed: true))
-              as Map)
-          .cast<String, dynamic>();
+      final map =
+          (jsonDecode(utf8.decode(entry.content, allowMalformed: true)) as Map)
+              .cast<String, dynamic>();
       return switch (map['type']?.toString().toLowerCase()) {
         'audiopack' => PackType.audio,
         'texturepack' => PackType.texture,
@@ -384,8 +394,7 @@ class ResourcePackStore {
         final version = map['Version'];
         var versionText = '1.0';
         if (version is Map) {
-          versionText =
-              '${version['major'] ?? 0}.${version['minor'] ?? 0}';
+          versionText = '${version['major'] ?? 0}.${version['minor'] ?? 0}';
         } else if (version != null) {
           versionText = version.toString();
         }
@@ -508,6 +517,7 @@ class ResourcePackStore {
           .replaceAll(RegExp(r'\s+'), '_');
       return cleaned.length > max ? cleaned.substring(0, max) : cleaned;
     }
+
     final prefix = switch (type) {
       PackType.texture => 'tex',
       PackType.language => 'lang',
@@ -536,11 +546,11 @@ class _PackConfig {
   final int type;
 
   _PackConfig copyWith({bool? enable, int? priority}) => _PackConfig(
-        file: file,
-        enable: enable ?? this.enable,
-        priority: priority ?? this.priority,
-        type: type,
-      );
+    file: file,
+    enable: enable ?? this.enable,
+    priority: priority ?? this.priority,
+    type: type,
+  );
 }
 
 class _PackInfo {

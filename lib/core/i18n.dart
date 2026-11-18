@@ -7,18 +7,18 @@ enum AppLanguage { system, zhHans, en, ru }
 
 extension AppLanguageX on AppLanguage {
   String get storageName => switch (this) {
-        AppLanguage.system => 'System',
-        AppLanguage.zhHans => 'ZhHans',
-        AppLanguage.en => 'En',
-        AppLanguage.ru => 'Ru',
-      };
+    AppLanguage.system => 'System',
+    AppLanguage.zhHans => 'ZhHans',
+    AppLanguage.en => 'En',
+    AppLanguage.ru => 'Ru',
+  };
 
   String get label => switch (this) {
-        AppLanguage.system => 'settings.followSystem',
-        AppLanguage.zhHans => '简体中文',
-        AppLanguage.en => 'English',
-        AppLanguage.ru => 'Русский',
-      };
+    AppLanguage.system => 'settings.followSystem',
+    AppLanguage.zhHans => '简体中文',
+    AppLanguage.en => 'English',
+    AppLanguage.ru => 'Русский',
+  };
 
   static AppLanguage parse(String? raw) {
     return switch (raw) {
@@ -58,7 +58,8 @@ class I18n {
       'update.managerHint': '管理器更新将打开浏览器下载',
       'update.downloading': '正在下载并安装…',
       'root.required.title': '需要 Root 权限',
-      'root.required.body': '当前为 Root / Xposed 模式，启动游戏前需要授予 Root 权限，用于把管理器目录共享给游戏进程。',
+      'root.required.body':
+          '当前为 Root / Xposed 模式，启动游戏前需要授予 Root 权限，用于把管理器目录共享给游戏进程。',
       'root.required.retry': '重新检测',
       'root.check': '检测 Root',
       'root.available': 'Root 权限可用',
@@ -135,11 +136,13 @@ class I18n {
       'oss.title': '开源声明',
       'oss.project': '本项目',
       'oss.projectDesc': 'TEFManager 以 AGPL-3.0 协议开源',
-      'oss.projectText': 'TEFManager 是 TEFKernel 生态的官方图形化管理工具，完全开源。你可以自由查看、修改和分发本软件；任何衍生作品也必须以 AGPL-3.0 协议开源发布。',
+      'oss.projectText':
+          'TEFManager 是 TEFKernel 生态的官方图形化管理工具，完全开源。你可以自由查看、修改和分发本软件；任何衍生作品也必须以 AGPL-3.0 协议开源发布。',
       'oss.thirdParty': '第三方组件',
       'oss.thirdPartyDesc': '本应用随附或依赖的开源软件',
       'oss.viewLicenses': '查看完整依赖许可证',
-      'oss.notice': '以上许可证文本随应用一同分发。Terraria 为 Re-Logic 公司的注册商标，本应用未获其官方授权，属于第三方社区工具。',
+      'oss.notice':
+          '以上许可证文本随应用一同分发。Terraria 为 Re-Logic 公司的注册商标，本应用未获其官方授权，属于第三方社区工具。',
       'settings.logs': '日志',
       'settings.clearLogs': '清除日志',
       'settings.exportLogs': '导出日志',
@@ -152,7 +155,8 @@ class I18n {
     'en': {
       'home.game.count': 'games',
       'home.game.launchFailed': 'Launch failed. Is the game installed?',
-      'home.patch.hint': 'Patching modifies the manifest and re-signs the APK; this can take a while.',
+      'home.patch.hint':
+          'Patching modifies the manifest and re-signs the APK; this can take a while.',
       'update.title': 'Updates available',
       'update.none': 'You are up to date',
       'update.failed': 'Failed to check for updates',
@@ -163,7 +167,8 @@ class I18n {
       'update.managerHint': 'Manager updates open the browser',
       'update.downloading': 'Downloading and installing…',
       'root.required.title': 'Root permission required',
-      'root.required.body': 'Root / Xposed mode needs root access before launching, so the manager directory can be shared with the game process.',
+      'root.required.body':
+          'Root / Xposed mode needs root access before launching, so the manager directory can be shared with the game process.',
       'root.required.retry': 'Check again',
       'root.check': 'Check root',
       'root.available': 'Root available',
@@ -171,10 +176,13 @@ class I18n {
       'mode.root': 'Root / Xposed mode',
       'mode.external': 'External mode',
       'mode.title': 'Run mode',
-      'mode.rootDesc': 'Xposed injects the kernel; the APK does not need patching.',
-      'mode.externalDesc': 'Patch the game APK first and keep the manager in background.',
+      'mode.rootDesc':
+          'Xposed injects the kernel; the APK does not need patching.',
+      'mode.externalDesc':
+          'Patch the game APK first and keep the manager in background.',
       'mod.settings.title': 'Mod settings',
-      'mod.settings.subtitle': 'Values are read and validated by the mod itself and stored in its private directory.',
+      'mod.settings.subtitle':
+          'Values are read and validated by the mod itself and stored in its private directory.',
       'mod.settings.save': 'Save settings',
       'mod.settings.saved': 'Settings saved',
       'mod.settings.reset': 'Restore defaults',
@@ -198,7 +206,8 @@ class I18n {
       'manager.install.dependency': 'Installing inline dependency',
       'manager.install.ready': 'Ready',
       'manager.delete.title': 'Delete \${name}?',
-      'manager.delete.body': 'The package, icon and private data will be removed. This cannot be undone.',
+      'manager.delete.body':
+          'The package, icon and private data will be removed. This cannot be undone.',
       'manager.install.installing': 'Installing…',
       'manager.install.result': '\${ok} succeeded, \${fail} failed',
       'manager.install.failDetail': 'Failure',
@@ -210,7 +219,8 @@ class I18n {
       'manager.loader.disabled': 'Disabled',
       'manager.import.empty': 'No files selected',
       'manager.add': 'Import component',
-      'manager.add.desc': 'Pick one or more .tefpkg packages; the manager detects their type automatically.',
+      'manager.add.desc':
+          'Pick one or more .tefpkg packages; the manager detects their type automatically.',
       'manager.add.choose': 'Choose files',
       'manager.tab.installed': 'Installed',
       'manager.tab.repository': 'Repository',
@@ -221,7 +231,8 @@ class I18n {
       'manager.kind.loader': 'Loaders',
       'manager.kind.mod': 'Mods',
       'manager.store.empty': 'No mod repository available',
-      'manager.store.emptyDesc': 'Enable a ModLoader with a repository URL first',
+      'manager.store.emptyDesc':
+          'Enable a ModLoader with a repository URL first',
       'onboarding.install.statusFailed': 'Failed',
       'settings.about.reinstall': 'Reinstall bundled components',
       'settings.about.reinstalling': 'Installing bundled components…',
@@ -231,7 +242,8 @@ class I18n {
       'resource.action.deselect': 'Deselect',
       'resource.limit': 'At most \${count} language packs can be enabled',
       'resource.delete.title': 'Delete \${name}?',
-      'resource.delete.body': 'The pack file and configuration will be removed. This cannot be undone.',
+      'resource.delete.body':
+          'The pack file and configuration will be removed. This cannot be undone.',
       'resource.installing': 'Installing resource packs…',
       'resource.install.result': '\${ok} succeeded, \${fail} failed',
       'resource.empty': 'No resource packs',
@@ -240,11 +252,14 @@ class I18n {
       'oss.title': 'Open source',
       'oss.project': 'This project',
       'oss.projectDesc': 'TEFManager is released under AGPL-3.0',
-      'oss.projectText': 'TEFManager is the official graphical manager for the TEFKernel ecosystem and is fully open source. You may study, modify and redistribute it; derivative works must also be released under AGPL-3.0.',
+      'oss.projectText':
+          'TEFManager is the official graphical manager for the TEFKernel ecosystem and is fully open source. You may study, modify and redistribute it; derivative works must also be released under AGPL-3.0.',
       'oss.thirdParty': 'Third-party components',
-      'oss.thirdPartyDesc': 'Open-source software bundled with or used by this app',
+      'oss.thirdPartyDesc':
+          'Open-source software bundled with or used by this app',
       'oss.viewLicenses': 'View full dependency licenses',
-      'oss.notice': 'The license texts above are distributed with the app. Terraria is a trademark of Re-Logic; this is an unofficial community tool.',
+      'oss.notice':
+          'The license texts above are distributed with the app. Terraria is a trademark of Re-Logic; this is an unofficial community tool.',
       'settings.logs': 'Logs',
       'settings.clearLogs': 'Clear logs',
       'settings.exportLogs': 'Export logs',
@@ -257,7 +272,8 @@ class I18n {
     'ru': {
       'home.game.count': 'игр',
       'home.game.launchFailed': 'Не удалось запустить игру',
-      'home.patch.hint': 'Патч изменяет манифест и подписывает APK заново, это может занять время.',
+      'home.patch.hint':
+          'Патч изменяет манифест и подписывает APK заново, это может занять время.',
       'update.title': 'Доступны обновления',
       'update.none': 'У вас последняя версия',
       'update.failed': 'Не удалось проверить обновления',
@@ -268,7 +284,8 @@ class I18n {
       'update.managerHint': 'Обновление менеджера откроется в браузере',
       'update.downloading': 'Загрузка и установка…',
       'root.required.title': 'Нужны права Root',
-      'root.required.body': 'Режим Root / Xposed требует root-доступа перед запуском, чтобы поделиться папкой менеджера с процессом игры.',
+      'root.required.body':
+          'Режим Root / Xposed требует root-доступа перед запуском, чтобы поделиться папкой менеджера с процессом игры.',
       'root.required.retry': 'Проверить снова',
       'root.check': 'Проверить Root',
       'root.available': 'Root доступен',
@@ -279,7 +296,8 @@ class I18n {
       'mode.rootDesc': 'Xposed внедряет ядро, патчить APK не нужно.',
       'mode.externalDesc': 'Сначала пропатчите APK и держите менеджер в фоне.',
       'mod.settings.title': 'Настройки мода',
-      'mod.settings.subtitle': 'Значения читает и проверяет сам мод; они сохраняются в его приватной папке.',
+      'mod.settings.subtitle':
+          'Значения читает и проверяет сам мод; они сохраняются в его приватной папке.',
       'mod.settings.save': 'Сохранить',
       'mod.settings.saved': 'Настройки сохранены',
       'mod.settings.reset': 'Сбросить по умолчанию',
@@ -303,7 +321,8 @@ class I18n {
       'manager.install.dependency': 'Установка зависимости',
       'manager.install.ready': 'Готово',
       'manager.delete.title': 'Удалить \${name}?',
-      'manager.delete.body': 'Пакет, значок и личные данные будут удалены безвозвратно.',
+      'manager.delete.body':
+          'Пакет, значок и личные данные будут удалены безвозвратно.',
       'manager.install.installing': 'Установка…',
       'manager.install.result': 'Успешно: \${ok}, ошибок: \${fail}',
       'manager.install.failDetail': 'Ошибка',
@@ -326,7 +345,8 @@ class I18n {
       'manager.kind.loader': 'Загрузчики',
       'manager.kind.mod': 'Моды',
       'manager.store.empty': 'Репозиторий недоступен',
-      'manager.store.emptyDesc': 'Сначала включите ModLoader с адресом репозитория',
+      'manager.store.emptyDesc':
+          'Сначала включите ModLoader с адресом репозитория',
       'onboarding.install.statusFailed': 'Ошибка',
       'settings.about.reinstall': 'Переустановить встроенные компоненты',
       'settings.about.reinstalling': 'Установка встроенных компонентов…',
@@ -336,7 +356,8 @@ class I18n {
       'resource.action.deselect': 'Снять выбор',
       'resource.limit': 'Можно включить не более \${count} языковых паков',
       'resource.delete.title': 'Удалить \${name}?',
-      'resource.delete.body': 'Файл пака и его настройки будут удалены безвозвратно.',
+      'resource.delete.body':
+          'Файл пака и его настройки будут удалены безвозвратно.',
       'resource.installing': 'Установка ресурспаков…',
       'resource.install.result': 'Успешно: \${ok}, ошибок: \${fail}',
       'resource.empty': 'Ресурспаков нет',
@@ -345,11 +366,14 @@ class I18n {
       'oss.title': 'Открытый исходный код',
       'oss.project': 'Этот проект',
       'oss.projectDesc': 'TEFManager распространяется по AGPL-3.0',
-      'oss.projectText': 'TEFManager — официальный графический менеджер экосистемы TEFKernel с полностью открытым кодом. Вы можете изучать, изменять и распространять его; производные работы также должны быть под AGPL-3.0.',
+      'oss.projectText':
+          'TEFManager — официальный графический менеджер экосистемы TEFKernel с полностью открытым кодом. Вы можете изучать, изменять и распространять его; производные работы также должны быть под AGPL-3.0.',
       'oss.thirdParty': 'Сторонние компоненты',
-      'oss.thirdPartyDesc': 'Открытое ПО, входящее в приложение или используемое им',
+      'oss.thirdPartyDesc':
+          'Открытое ПО, входящее в приложение или используемое им',
       'oss.viewLicenses': 'Все лицензии зависимостей',
-      'oss.notice': 'Тексты лицензий распространяются вместе с приложением. Terraria — товарный знак Re-Logic; это неофициальный инструмент сообщества.',
+      'oss.notice':
+          'Тексты лицензий распространяются вместе с приложением. Terraria — товарный знак Re-Logic; это неофициальный инструмент сообщества.',
       'settings.logs': 'Журналы',
       'settings.clearLogs': 'Очистить',
       'settings.exportLogs': 'Экспорт',
@@ -388,7 +412,8 @@ class I18n {
   }
 
   String t(String key, [Map<String, Object?>? vars]) {
-    var text = _bundles[_code]?[key] ??
+    var text =
+        _bundles[_code]?[key] ??
         _extras[_code]?[key] ??
         _bundles['en']?[key] ??
         _extras['en']?[key] ??
@@ -403,4 +428,5 @@ class I18n {
 }
 
 /// Shorthand used across the UI.
-String tr(String key, [Map<String, Object?>? vars]) => I18n.instance.t(key, vars);
+String tr(String key, [Map<String, Object?>? vars]) =>
+    I18n.instance.t(key, vars);

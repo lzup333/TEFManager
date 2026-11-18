@@ -38,7 +38,9 @@ fi
 echo "==> flutter pub get"
 "$FLUTTER_BIN" pub get
 
-if [ "${1:-}" != "--skip-checks" ]; then
+if [ "${1:-}" = "--skip-checks" ]; then
+  shift
+else
   echo "==> flutter analyze"
   "$FLUTTER_BIN" analyze --no-fatal-infos
   echo "==> flutter test"
@@ -63,7 +65,7 @@ fi
 if command -v unzip >/dev/null 2>&1 && [ -f "$APK" ]; then
   found=0
   for dex in $(unzip -Z1 "$APK" | grep -E '^classes[0-9]*\.dex$'); do
-    if unzip -p "$APK" "$dex" | grep -aq 'eternal.future.tefmanager.MainHook'; then
+    if unzip -p "$APK" "$dex" | grep -a 'eternal.future.tefmanager.MainHook' >/dev/null 2>&1; then
       found=1
       break
     fi

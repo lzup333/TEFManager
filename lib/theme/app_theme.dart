@@ -10,7 +10,10 @@ class AppTheme {
   static ThemeData dark(Color seed) => _build(Brightness.dark, seed);
 
   static ThemeData _build(Brightness brightness, Color seed) {
-    final scheme = ColorScheme.fromSeed(seedColor: seed, brightness: brightness);
+    final scheme = ColorScheme.fromSeed(
+      seedColor: seed,
+      brightness: brightness,
+    );
     final base = ThemeData(
       useMaterial3: true,
       brightness: brightness,
@@ -34,17 +37,18 @@ class AppTheme {
         elevation: 0,
         margin: EdgeInsets.zero,
         color: scheme.surfaceContainerLow,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
       listTileTheme: const ListTileThemeData(
-        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+        minVerticalPadding: 10,
       ),
       chipTheme: base.chipTheme.copyWith(
         side: BorderSide.none,
         backgroundColor: scheme.surfaceContainerHigh,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         labelStyle: base.textTheme.labelMedium,
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: scheme.surfaceContainerLow,
@@ -67,14 +71,20 @@ class AppTheme {
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           minimumSize: const Size(64, 48),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          textStyle: base.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          textStyle: base.textTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           minimumSize: const Size(64, 48),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
         ),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
@@ -84,7 +94,9 @@ class AppTheme {
       ),
       segmentedButtonTheme: SegmentedButtonThemeData(
         style: SegmentedButton.styleFrom(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       ),
       dividerTheme: DividerThemeData(

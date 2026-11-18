@@ -303,7 +303,10 @@ ModItem decodeMod(Uint8List bytes) {
   final deps = <Dependence>[];
   final conflicts = <String>[];
   var detailsURL = '';
-  var stable = false, experimental = false, deprecated = false, extended = false;
+  var stable = false,
+      experimental = false,
+      deprecated = false,
+      extended = false;
   final settings = <ModSetting>[];
   var updateInfoUrl = '';
   final r = PbReader(bytes);

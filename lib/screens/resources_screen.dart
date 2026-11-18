@@ -20,10 +20,22 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
   bool _busy = false;
 
   static const _types = [
-    _PackTab(PackType.language, 'resource.language.title', Icons.translate_rounded),
-    _PackTab(PackType.languagePatch, 'resource.languagePatch', Icons.spellcheck_rounded),
+    _PackTab(
+      PackType.language,
+      'resource.language.title',
+      Icons.translate_rounded,
+    ),
+    _PackTab(
+      PackType.languagePatch,
+      'resource.languagePatch',
+      Icons.spellcheck_rounded,
+    ),
     _PackTab(PackType.texture, 'resource.texture', Icons.image_outlined),
-    _PackTab(PackType.font, 'resource.font.title', Icons.font_download_outlined),
+    _PackTab(
+      PackType.font,
+      'resource.font.title',
+      Icons.font_download_outlined,
+    ),
     _PackTab(PackType.audio, 'resource.audio.title', Icons.music_note_outlined),
   ];
 
@@ -80,44 +92,6 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
               },
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerLow,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    _type == PackType.font
-                        ? Icons.check_circle_outline_rounded
-                        : Icons.layers_outlined,
-                    size: 18,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      _type == PackType.font
-                          ? tr('resource.font.none')
-                          : tr('resource.prompt'),
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ),
-                  if (_type == PackType.language)
-                    MetaChip(
-                      label:
-                          '${snapshot.enabled[PackType.language]?.length ?? 0}/${ResourcePackStore.languagePackLimit}',
-                      tone: ChipTone.primary,
-                    ),
-                ],
-              ),
-            ),
-          ),
           Expanded(
             child: packs.isEmpty
                 ? EmptyState(
@@ -135,7 +109,13 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
                     itemCount: packs.length,
                     itemBuilder: (context, index) {
                       final pack = packs[index];
-                      return _buildPackCard(context, app, snapshot, pack, index);
+                      return _buildPackCard(
+                        context,
+                        app,
+                        snapshot,
+                        pack,
+                        index,
+                      );
                     },
                   ),
           ),
@@ -177,10 +157,9 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
                       pack.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleSmall
-                          ?.copyWith(fontWeight: FontWeight.w600),
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
@@ -188,8 +167,8 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                     if (pack.description.isNotEmpty) ...[
                       const SizedBox(height: 4),
@@ -200,22 +179,18 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],
-                    const SizedBox(height: 6),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: [
-                        MetaChip(
-                          label: pack.type == PackOrigin.terraria
-                              ? 'Terraria'
-                              : 'TEFManager',
-                        ),
-                        if (canReorder)
-                          MetaChip(
-                            label: '#${index + 1}',
-                            tone: ChipTone.primary,
-                          ),
-                      ],
+                    const SizedBox(height: 4),
+                    Text(
+                      [
+                        pack.type == PackOrigin.terraria
+                            ? 'Terraria'
+                            : 'TEFManager',
+                        if (canReorder) '#${index + 1}',
+                        if (enabled) tr('manager.loader.enabled'),
+                      ].join('  ·  '),
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
@@ -304,9 +279,11 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(tr('resource.limit', {
-            'count': ResourcePackStore.languagePackLimit,
-          })),
+          content: Text(
+            tr('resource.limit', {
+              'count': ResourcePackStore.languagePackLimit,
+            }),
+          ),
         ),
       );
     }
@@ -347,9 +324,9 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
     final paths = await app.pickPackageFiles();
     if (!mounted) return;
     if (paths.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(tr('manager.import.empty'))),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(tr('manager.import.empty'))));
       return;
     }
 
@@ -405,8 +382,8 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
                 child: Text(
                   result.error ?? 'unknown',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
+                    color: Theme.of(context).colorScheme.error,
+                  ),
                 ),
               ),
           ],
@@ -442,18 +419,16 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
             children: [
               Text(
                 pack.name,
-                style: Theme.of(context)
-                    .textTheme
-                    .titleLarge
-                    ?.copyWith(fontWeight: FontWeight.w700),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 4),
               Text(
                 '${pack.author} · v${pack.version}',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodySmall
-                    ?.copyWith(color: scheme.onSurfaceVariant),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
               ),
               const SizedBox(height: 12),
               Wrap(
@@ -465,10 +440,7 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
                         ? 'Terraria'
                         : 'TEFManager',
                   ),
-                  MetaChip(
-                    label: _labelFor(_type),
-                    tone: ChipTone.primary,
-                  ),
+                  MetaChip(label: _labelFor(_type), tone: ChipTone.primary),
                   MetaChip(
                     label: enabled
                         ? tr('manager.loader.enabled')
@@ -479,22 +451,24 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
               ),
               if (pack.description.isNotEmpty) ...[
                 const SizedBox(height: 16),
-                Text(tr('manager.details'),
-                    style: Theme.of(context).textTheme.titleSmall),
+                Text(
+                  tr('manager.details'),
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
                 const SizedBox(height: 6),
-                Text(pack.description,
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(height: 1.5)),
+                Text(
+                  pack.description,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(height: 1.5),
+                ),
               ],
               const SizedBox(height: 16),
               SelectableText(
                 pack.fileName,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodySmall
-                    ?.copyWith(color: scheme.onSurfaceVariant),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
               ),
             ],
           ),

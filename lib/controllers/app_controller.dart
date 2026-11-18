@@ -192,11 +192,7 @@ class AppController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> moveResourcePack(
-    PackType type,
-    String fileName,
-    bool up,
-  ) async {
+  Future<void> moveResourcePack(PackType type, String fileName, bool up) async {
     final store = _resourceStore;
     if (store == null) return;
     await store.move(type, fileName, up);
@@ -204,10 +200,7 @@ class AppController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> deleteResourcePack(
-    PackType type,
-    ResourcesPackItem pack,
-  ) async {
+  Future<void> deleteResourcePack(PackType type, ResourcesPackItem pack) async {
     final store = _resourceStore;
     if (store == null) return;
     await store.delete(type, pack);
@@ -381,12 +374,12 @@ class AppController extends ChangeNotifier {
   }
 
   Future<List<String>> pickApkFile() => _native.pickFiles(
-        multiple: false,
-        mimeTypes: const [
-          'application/vnd.android.package-archive',
-          'application/octet-stream',
-        ],
-      );
+    multiple: false,
+    mimeTypes: const [
+      'application/vnd.android.package-archive',
+      'application/octet-stream',
+    ],
+  );
 
   Future<PatchResult> patchApk(String path, PatchOption option) =>
       _native.patchApk(path, option: option);
@@ -397,9 +390,9 @@ class AppController extends ChangeNotifier {
   Stream<String> get patchProgress => _native.patchProgress;
 
   Future<List<String>> pickPackageFiles() => _native.pickFiles(
-        multiple: true,
-        mimeTypes: const ['application/zip', 'application/octet-stream', '*/*'],
-      );
+    multiple: true,
+    mimeTypes: const ['application/zip', 'application/octet-stream', '*/*'],
+  );
 
   Future<void> _loadGames() async {
     final games = await _native.listGames();

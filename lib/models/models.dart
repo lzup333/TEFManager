@@ -40,14 +40,14 @@ class GameItem {
   final String architecture;
 
   factory GameItem.fromMap(Map<String, dynamic> m) => GameItem(
-        apkPackName: _asString(m['apkPackName']),
-        filePath: _asString(m['filePath']),
-        tefloaderPath: _asString(m['tefloaderPath']),
-        version: _asString(m['version']),
-        versionCode: _asInt(m['versionCode']),
-        hash: _asString(m['hash']),
-        architecture: _asString(m['architecture']),
-      );
+    apkPackName: _asString(m['apkPackName']),
+    filePath: _asString(m['filePath']),
+    tefloaderPath: _asString(m['tefloaderPath']),
+    version: _asString(m['version']),
+    versionCode: _asInt(m['versionCode']),
+    hash: _asString(m['hash']),
+    architecture: _asString(m['architecture']),
+  );
 }
 
 class Dependence {
@@ -62,10 +62,10 @@ class Dependence {
   final int maxVersionCode;
 
   factory Dependence.fromMap(Map<String, dynamic> m) => Dependence(
-        pkgId: _asString(m['pkgId']),
-        minVersionCode: _asInt(m['minVersionCode']),
-        maxVersionCode: _asInt(m['maxVersionCode']),
-      );
+    pkgId: _asString(m['pkgId']),
+    minVersionCode: _asInt(m['minVersionCode']),
+    maxVersionCode: _asInt(m['maxVersionCode']),
+  );
 }
 
 class ArchitectureSupport {
@@ -84,13 +84,14 @@ class ArchitectureSupport {
   bool get isEmpty => !arm64 && !arm && !x64 && !x86;
 
   List<String> get archs => [
-        if (arm64) 'ARM64',
-        if (arm) 'ARM',
-        if (x64) 'x64',
-        if (x86) 'x86',
-      ];
+    if (arm64) 'ARM64',
+    if (arm) 'ARM',
+    if (x64) 'x64',
+    if (x86) 'x86',
+  ];
 
-  factory ArchitectureSupport.fromMap(Map<String, dynamic>? m) => ArchitectureSupport(
+  factory ArchitectureSupport.fromMap(Map<String, dynamic>? m) =>
+      ArchitectureSupport(
         arm64: _asBool(m?['arm64']),
         arm: _asBool(m?['arm']),
         x64: _asBool(m?['x64']),
@@ -118,7 +119,11 @@ class PlatformSupport {
     final out = <String>[];
     void add(String name, ArchitectureSupport a) {
       if (a.isEmpty) return;
-      out.add(a.archs.length == 1 ? '$name (${a.archs.first})' : '$name (${a.archs.join(', ')})');
+      out.add(
+        a.archs.length == 1
+            ? '$name (${a.archs.first})'
+            : '$name (${a.archs.join(', ')})',
+      );
     }
 
     add('Android', android);
@@ -130,12 +135,16 @@ class PlatformSupport {
   }
 
   factory PlatformSupport.fromMap(Map<String, dynamic>? m) => PlatformSupport(
-        android: ArchitectureSupport.fromMap(m?['android'] as Map<String, dynamic>?),
-        windows: ArchitectureSupport.fromMap(m?['windows'] as Map<String, dynamic>?),
-        linux: ArchitectureSupport.fromMap(m?['linux'] as Map<String, dynamic>?),
-        mac: ArchitectureSupport.fromMap(m?['mac'] as Map<String, dynamic>?),
-        ios: ArchitectureSupport.fromMap(m?['ios'] as Map<String, dynamic>?),
-      );
+    android: ArchitectureSupport.fromMap(
+      m?['android'] as Map<String, dynamic>?,
+    ),
+    windows: ArchitectureSupport.fromMap(
+      m?['windows'] as Map<String, dynamic>?,
+    ),
+    linux: ArchitectureSupport.fromMap(m?['linux'] as Map<String, dynamic>?),
+    mac: ArchitectureSupport.fromMap(m?['mac'] as Map<String, dynamic>?),
+    ios: ArchitectureSupport.fromMap(m?['ios'] as Map<String, dynamic>?),
+  );
 }
 
 class PluginItem {
@@ -156,13 +165,13 @@ class PluginItem {
   final int versionCode;
 
   factory PluginItem.fromMap(Map<String, dynamic> m) => PluginItem(
-        pkgId: _asString(m['pkgId']),
-        name: _asString(m['name']),
-        author: _asString(m['author']),
-        description: _asString(m['description']),
-        version: _asString(m['version']),
-        versionCode: _asInt(m['versionCode']),
-      );
+    pkgId: _asString(m['pkgId']),
+    name: _asString(m['name']),
+    author: _asString(m['author']),
+    description: _asString(m['description']),
+    version: _asString(m['version']),
+    versionCode: _asInt(m['versionCode']),
+  );
 }
 
 class ModuleItem {
@@ -191,17 +200,17 @@ class ModuleItem {
   final PlatformSupport support;
 
   factory ModuleItem.fromMap(Map<String, dynamic> m) => ModuleItem(
-        pkgId: _asString(m['pkgId']),
-        name: _asString(m['name']),
-        author: _asString(m['author']),
-        description: _asString(m['description']),
-        brieflyDescribe: _asString(m['brieflyDescribe']),
-        version: _asString(m['version']),
-        versionCode: _asInt(m['versionCode']),
-        detailsURL: _asString(m['detailsURL']),
-        dependence: _deps(m['dependence']),
-        support: PlatformSupport.fromMap(m['support'] as Map<String, dynamic>?),
-      );
+    pkgId: _asString(m['pkgId']),
+    name: _asString(m['name']),
+    author: _asString(m['author']),
+    description: _asString(m['description']),
+    brieflyDescribe: _asString(m['brieflyDescribe']),
+    version: _asString(m['version']),
+    versionCode: _asInt(m['versionCode']),
+    detailsURL: _asString(m['detailsURL']),
+    dependence: _deps(m['dependence']),
+    support: PlatformSupport.fromMap(m['support'] as Map<String, dynamic>?),
+  );
 }
 
 class ModLoaderItem {
@@ -232,25 +241,22 @@ class ModLoaderItem {
   final String modRepositoryIndexUrl;
 
   factory ModLoaderItem.fromMap(Map<String, dynamic> m) => ModLoaderItem(
-        pkgId: _asString(m['pkgId']),
-        name: _asString(m['name']),
-        author: _asString(m['author']),
-        brieflyDescribe: _asString(m['brieflyDescribe']),
-        description: _asString(m['description']),
-        version: _asString(m['version']),
-        versionCode: _asInt(m['versionCode']),
-        dependence: _deps(m['dependence']),
-        support: PlatformSupport.fromMap(m['support'] as Map<String, dynamic>?),
-        updateInfoUrl: _asString(m['updateInfoUrl']),
-        modRepositoryIndexUrl: _asString(m['modRepositoryIndexUrl']),
-      );
+    pkgId: _asString(m['pkgId']),
+    name: _asString(m['name']),
+    author: _asString(m['author']),
+    brieflyDescribe: _asString(m['brieflyDescribe']),
+    description: _asString(m['description']),
+    version: _asString(m['version']),
+    versionCode: _asInt(m['versionCode']),
+    dependence: _deps(m['dependence']),
+    support: PlatformSupport.fromMap(m['support'] as Map<String, dynamic>?),
+    updateInfoUrl: _asString(m['updateInfoUrl']),
+    modRepositoryIndexUrl: _asString(m['modRepositoryIndexUrl']),
+  );
 }
 
 List<Dependence> _deps(dynamic v) => v is List
-    ? v
-        .whereType<Map<String, dynamic>>()
-        .map(Dependence.fromMap)
-        .toList()
+    ? v.whereType<Map<String, dynamic>>().map(Dependence.fromMap).toList()
     : const [];
 
 class ModSettingOption {
@@ -260,9 +266,9 @@ class ModSettingOption {
   final String label;
 
   factory ModSettingOption.fromMap(Map<String, dynamic> m) => ModSettingOption(
-        value: _asString(m['value']),
-        label: _asString(m['label']),
-      );
+    value: _asString(m['value']),
+    label: _asString(m['label']),
+  );
 }
 
 enum ModSettingType { switchType, integer, choice, string }
@@ -314,9 +320,9 @@ class ModSetting {
       unit: _asString(m['unit']).isEmpty ? '×' : _asString(m['unit']),
       options: m['options'] is List
           ? (m['options'] as List)
-              .whereType<Map<String, dynamic>>()
-              .map(ModSettingOption.fromMap)
-              .toList()
+                .whereType<Map<String, dynamic>>()
+                .map(ModSettingOption.fromMap)
+                .toList()
           : const [],
       section: _asString(m['section']),
     );
@@ -409,42 +415,42 @@ class ModItem {
   final String updateInfoUrl;
 
   factory ModItem.fromMap(Map<String, dynamic> m) => ModItem(
-        pkgId: _asString(m['pkgId']),
-        name: _asString(m['name']),
-        author: _asString(m['author']),
-        version: _asString(m['version']),
-        versionCode: _asInt(m['versionCode']),
-        brieflyDescribe: _asString(m['brieflyDescribe']),
-        description: _asString(m['description']),
-        features: m['features'] is List
-            ? (m['features'] as List)
-                .map((e) => ModFeature.parse(_asString(e)))
-                .whereType<ModFeature>()
-                .toList()
-            : const [],
-        sizeCategory: ModSizeCategory.values.firstWhere(
-          (e) => e.name.toUpperCase() == _asString(m['sizeCategory']).toUpperCase(),
-          orElse: () => ModSizeCategory.tiny,
-        ),
-        targetGameVersion: _asString(m['targetGameVersion']),
-        minGameVersion: _asString(m['minGameVersion']),
-        maxGameVersion: _asString(m['maxGameVersion']),
-        support: PlatformSupport.fromMap(m['support'] as Map<String, dynamic>?),
-        dependence: _deps(m['dependence']),
-        conflicts: _asStringList(m['conflicts']),
-        detailsURL: _asString(m['detailsURL']),
-        stableVerified: _asBool(m['stableVerified']),
-        experimental: _asBool(m['experimental']),
-        deprecated: _asBool(m['deprecated']),
-        hasExtendedContent: _asBool(m['hasExtendedContent']),
-        settings: m['settings'] is List
-            ? (m['settings'] as List)
-                .whereType<Map<String, dynamic>>()
-                .map(ModSetting.fromMap)
-                .toList()
-            : const [],
-        updateInfoUrl: _asString(m['updateInfoUrl']),
-      );
+    pkgId: _asString(m['pkgId']),
+    name: _asString(m['name']),
+    author: _asString(m['author']),
+    version: _asString(m['version']),
+    versionCode: _asInt(m['versionCode']),
+    brieflyDescribe: _asString(m['brieflyDescribe']),
+    description: _asString(m['description']),
+    features: m['features'] is List
+        ? (m['features'] as List)
+              .map((e) => ModFeature.parse(_asString(e)))
+              .whereType<ModFeature>()
+              .toList()
+        : const [],
+    sizeCategory: ModSizeCategory.values.firstWhere(
+      (e) => e.name.toUpperCase() == _asString(m['sizeCategory']).toUpperCase(),
+      orElse: () => ModSizeCategory.tiny,
+    ),
+    targetGameVersion: _asString(m['targetGameVersion']),
+    minGameVersion: _asString(m['minGameVersion']),
+    maxGameVersion: _asString(m['maxGameVersion']),
+    support: PlatformSupport.fromMap(m['support'] as Map<String, dynamic>?),
+    dependence: _deps(m['dependence']),
+    conflicts: _asStringList(m['conflicts']),
+    detailsURL: _asString(m['detailsURL']),
+    stableVerified: _asBool(m['stableVerified']),
+    experimental: _asBool(m['experimental']),
+    deprecated: _asBool(m['deprecated']),
+    hasExtendedContent: _asBool(m['hasExtendedContent']),
+    settings: m['settings'] is List
+        ? (m['settings'] as List)
+              .whereType<Map<String, dynamic>>()
+              .map(ModSetting.fromMap)
+              .toList()
+        : const [],
+    updateInfoUrl: _asString(m['updateInfoUrl']),
+  );
 }
 
 enum PackType { texture, language, languagePatch, audio, font }
@@ -476,7 +482,8 @@ class ResourcesPackItem {
   final bool enabled;
   final int priority;
 
-  ResourcesPackItem copyWith({bool? enabled, int? priority}) => ResourcesPackItem(
+  ResourcesPackItem copyWith({bool? enabled, int? priority}) =>
+      ResourcesPackItem(
         name: name,
         author: author,
         description: description,
@@ -489,21 +496,23 @@ class ResourcesPackItem {
         priority: priority ?? this.priority,
       );
 
-  factory ResourcesPackItem.fromMap(Map<String, dynamic> m, PackType packType) =>
-      ResourcesPackItem(
-        name: _asString(m['name']),
-        author: _asString(m['author']),
-        description: _asString(m['description']),
-        version: _asString(m['version']),
-        fileName: _asString(m['fileName']),
-        iconPath: _asString(m['iconPath']),
-        type: _asString(m['type']).toLowerCase() == 'terraria'
-            ? PackOrigin.terraria
-            : PackOrigin.tefManager,
-        packType: packType,
-        enabled: _asBool(m['enable'] ?? m['enabled']),
-        priority: _asInt(m['priority']),
-      );
+  factory ResourcesPackItem.fromMap(
+    Map<String, dynamic> m,
+    PackType packType,
+  ) => ResourcesPackItem(
+    name: _asString(m['name']),
+    author: _asString(m['author']),
+    description: _asString(m['description']),
+    version: _asString(m['version']),
+    fileName: _asString(m['fileName']),
+    iconPath: _asString(m['iconPath']),
+    type: _asString(m['type']).toLowerCase() == 'terraria'
+        ? PackOrigin.terraria
+        : PackOrigin.tefManager,
+    packType: packType,
+    enabled: _asBool(m['enable'] ?? m['enabled']),
+    priority: _asInt(m['priority']),
+  );
 }
 
 class UpdateEntry {
@@ -526,14 +535,14 @@ class UpdateEntry {
   final int fileSize;
 
   factory UpdateEntry.fromMap(Map<String, dynamic>? m) => UpdateEntry(
-        fileName: _asString(m?['fileName']),
-        moduleName: _asString(m?['moduleName']),
-        newVersion: _asString(m?['newVersion']),
-        description: _asString(m?['description']),
-        downloadUrl: _asString(m?['downloadUrl']),
-        externalUrl: _asString(m?['externalUrl']),
-        fileSize: _asInt(m?['fileSize']),
-      );
+    fileName: _asString(m?['fileName']),
+    moduleName: _asString(m?['moduleName']),
+    newVersion: _asString(m?['newVersion']),
+    description: _asString(m?['description']),
+    downloadUrl: _asString(m?['downloadUrl']),
+    externalUrl: _asString(m?['externalUrl']),
+    fileSize: _asInt(m?['fileSize']),
+  );
 }
 
 class UpdateInfo {
@@ -556,14 +565,14 @@ class UpdateInfo {
   final UpdateEntry? music;
 
   factory UpdateInfo.fromMap(Map<String, dynamic> m) => UpdateInfo(
-        tefmanager: _entry(m['tefmanager']),
-        tefkernel: _entry(m['tefkernel']),
-        tefloader: _entry(m['tefloader']),
-        language: _entry(m['language']),
-        texture: _entry(m['texture']),
-        font: _entry(m['font']),
-        music: _entry(m['music']),
-      );
+    tefmanager: _entry(m['tefmanager']),
+    tefkernel: _entry(m['tefkernel']),
+    tefloader: _entry(m['tefloader']),
+    language: _entry(m['language']),
+    texture: _entry(m['texture']),
+    font: _entry(m['font']),
+    music: _entry(m['music']),
+  );
 
   static UpdateEntry? _entry(dynamic v) =>
       v is Map<String, dynamic> ? UpdateEntry.fromMap(v) : null;
@@ -585,12 +594,12 @@ class AddonUpdateInfo {
   final String updateLog;
 
   factory AddonUpdateInfo.fromMap(Map<String, dynamic> m) => AddonUpdateInfo(
-        version: _asString(m['version']),
-        versionCode: _asInt(m['versionCode']),
-        fileSize: _asInt(m['fileSize']),
-        downloadUrl: _asString(m['downloadUrl']),
-        updateLog: _asString(m['updateLog']),
-      );
+    version: _asString(m['version']),
+    versionCode: _asInt(m['versionCode']),
+    fileSize: _asInt(m['fileSize']),
+    downloadUrl: _asString(m['downloadUrl']),
+    updateLog: _asString(m['updateLog']),
+  );
 }
 
 class ModRepositoryEntry {
@@ -634,7 +643,8 @@ class ModRepositoryEntry {
   final String detailsURL;
   final String updateLog;
 
-  factory ModRepositoryEntry.fromMap(Map<String, dynamic> m) => ModRepositoryEntry(
+  factory ModRepositoryEntry.fromMap(Map<String, dynamic> m) =>
+      ModRepositoryEntry(
         pkgId: _asString(m['pkgId']),
         name: _asString(m['name']),
         author: _asString(m['author']),
@@ -646,14 +656,16 @@ class ModRepositoryEntry {
         fileSize: _asInt(m['fileSize']),
         downloadUrl: _asString(m['downloadUrl']),
         sizeCategory: ModSizeCategory.values.firstWhere(
-          (e) => e.name.toUpperCase() == _asString(m['sizeCategory']).toUpperCase(),
+          (e) =>
+              e.name.toUpperCase() ==
+              _asString(m['sizeCategory']).toUpperCase(),
           orElse: () => ModSizeCategory.tiny,
         ),
         features: m['features'] is List
             ? (m['features'] as List)
-                .map((e) => ModFeature.parse(_asString(e)))
-                .whereType<ModFeature>()
-                .toList()
+                  .map((e) => ModFeature.parse(_asString(e)))
+                  .whereType<ModFeature>()
+                  .toList()
             : const [],
         stableVerified: _asBool(m['stableVerified']),
         experimental: _asBool(m['experimental']),
@@ -679,9 +691,9 @@ class ModRepositoryIndex {
       loaderMinVersionCode: _asInt(m['loaderMinVersionCode']),
       mods: rawMods is List
           ? rawMods
-              .whereType<Map<String, dynamic>>()
-              .map(ModRepositoryEntry.fromMap)
-              .toList()
+                .whereType<Map<String, dynamic>>()
+                .map(ModRepositoryEntry.fromMap)
+                .toList()
           : const [],
     );
   }
@@ -706,10 +718,10 @@ class InstalledComponent {
   final String? loaderId;
 
   InstalledComponent copyWith({bool? enabled}) => InstalledComponent(
-        kind: kind,
-        pkgId: pkgId,
-        item: item,
-        enabled: enabled ?? this.enabled,
-        loaderId: loaderId,
-      );
+    kind: kind,
+    pkgId: pkgId,
+    item: item,
+    enabled: enabled ?? this.enabled,
+    loaderId: loaderId,
+  );
 }

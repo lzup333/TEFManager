@@ -20,44 +20,22 @@ class HomeScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        titleSpacing: 16,
-        title: Row(
-          children: [
-            const _BrandMark(),
-            const SizedBox(width: 12),
-            InkWell(
-              borderRadius: BorderRadius.circular(8),
-              onTap: () => _showModeDialog(context),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('TEFManager'),
-                    Row(
-                      children: [
-                        Text(
-                          app.moduleActive ? tr('mode.root') : tr('mode.external'),
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                color:
-                                    Theme.of(context).colorScheme.onSurfaceVariant,
-                              ),
-                        ),
-                        const SizedBox(width: 2),
-                        Icon(
-                          Icons.chevron_right_rounded,
-                          size: 14,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+        title: const Text('TEFManager'),
         actions: [
+          IconButton(
+            tooltip: app.moduleActive ? tr('mode.root') : tr('mode.external'),
+            onPressed: () => _showModeDialog(context),
+            icon: Icon(
+              app.moduleActive
+                  ? Icons.shield_rounded
+                  : Icons.open_in_new_rounded,
+            ),
+          ),
+          IconButton(
+            tooltip: tr('home.game.add'),
+            onPressed: () => _showAddGame(context),
+            icon: const Icon(Icons.add_rounded),
+          ),
           IconButton(
             tooltip: tr('refresh'),
             onPressed: app.busy ? null : app.refreshGames,
@@ -66,13 +44,6 @@ class HomeScreen extends StatelessWidget {
           const SizedBox(width: 4),
         ],
       ),
-      floatingActionButton: games.isEmpty
-          ? null
-          : FloatingActionButton.extended(
-              onPressed: () => _showAddGame(context),
-              icon: const Icon(Icons.add_rounded),
-              label: Text(tr('home.game.add')),
-            ),
       body: games.isEmpty
           ? EmptyState(
               icon: Icons.sports_esports_outlined,
@@ -91,14 +62,28 @@ class HomeScreen extends StatelessWidget {
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
                     child: _SelectedGameCard(game: selected),
                   ),
-                SectionHeader(
-                  title: tr('home.game.title'),
-                  subtitle:
-                      '${games.length} ${tr('home.game.count')}'.trim(),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+                  child: Row(
+                    children: [
+                      Text(
+                        tr('home.game.title'),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                      const Spacer(),
+                      Text(
+                        '${games.length}',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 Expanded(
                   child: ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                     itemCount: games.length,
                     separatorBuilder: (_, _) => const SizedBox(height: 8),
                     itemBuilder: (context, index) {
@@ -124,28 +109,6 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-class _BrandMark extends StatelessWidget {
-  const _BrandMark();
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      width: 40,
-      height: 40,
-      decoration: BoxDecoration(
-        color: scheme.primaryContainer,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Icon(
-        Icons.auto_awesome_mosaic_rounded,
-        color: scheme.onPrimaryContainer,
-        size: 22,
-      ),
-    );
-  }
-}
-
 class _SelectedGameCard extends StatelessWidget {
   const _SelectedGameCard({required this.game});
 
@@ -156,16 +119,20 @@ class _SelectedGameCard extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     return Card(
-      color: scheme.primaryContainer,
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      color: scheme.surfaceContainerLow,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
+        padding: const EdgeInsets.fromLTRB(18, 16, 18, 14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(Icons.sports_esports_rounded,
-                    color: scheme.onPrimaryContainer),
+                IconBadge(
+                  icon: Icons.sports_esports_rounded,
+                  size: 42,
+                  color: scheme.primaryContainer,
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -174,36 +141,25 @@ class _SelectedGameCard extends StatelessWidget {
                       Text(
                         displayName(game),
                         style: theme.textTheme.titleMedium?.copyWith(
-                          color: scheme.onPrimaryContainer,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '${game.version}  ·  ${game.apkPackName}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                        'v${game.version} (${game.versionCode})',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: scheme.onPrimaryContainer.withValues(alpha: 0.75),
+                          color: scheme.onSurfaceVariant,
                         ),
                       ),
                     ],
                   ),
                 ),
-                MetaChip(
-                  label: 'v${game.versionCode}',
-                  tone: ChipTone.primary,
-                ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
             SizedBox(
               width: double.infinity,
               child: FilledButton.icon(
-                style: FilledButton.styleFrom(
-                  backgroundColor: scheme.onPrimaryContainer,
-                  foregroundColor: scheme.primaryContainer,
-                ),
                 onPressed: () => _launchGame(context),
                 icon: const Icon(Icons.play_arrow_rounded),
                 label: Text(tr('home.game.play')),
@@ -228,9 +184,9 @@ Future<void> _launchGame(BuildContext context) async {
   }
   final ok = await app.launchSelected();
   if (!ok && context.mounted) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(tr('home.game.launchFailed'))),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(tr('home.game.launchFailed'))));
   }
 }
 
@@ -265,9 +221,9 @@ Future<void> _showRootRequired(BuildContext context) async {
                   await _launchGame(context);
                 } else {
                   setState(() {});
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(tr('root.denied'))),
-                  );
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text(tr('root.denied'))));
                 }
               },
               child: Text(tr('root.required.retry')),
@@ -291,10 +247,9 @@ Future<void> _showModeDialog(BuildContext context) async {
         children: [
           Text(
             app.moduleActive ? tr('mode.root') : tr('mode.external'),
-            style: Theme.of(context)
-                .textTheme
-                .titleSmall
-                ?.copyWith(fontWeight: FontWeight.w600),
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 4),
           Text(
@@ -409,7 +364,9 @@ class _GameTile extends StatelessWidget {
               IconBadge(
                 icon: Icons.videogame_asset_rounded,
                 size: 42,
-                color: selected ? scheme.primary : scheme.surfaceContainerHighest,
+                color: selected
+                    ? scheme.primary
+                    : scheme.surfaceContainerHighest,
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -418,10 +375,9 @@ class _GameTile extends StatelessWidget {
                   children: [
                     Text(
                       displayName(game),
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleSmall
-                          ?.copyWith(fontWeight: FontWeight.w600),
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
@@ -429,30 +385,24 @@ class _GameTile extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                          ),
+                        color: scheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: 8),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(game.version,
-                      style: Theme.of(context).textTheme.labelMedium),
-                  Text(
-                    game.hash.isEmpty ? '—' : game.hash.substring(0, 8),
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                          fontFeatures: const [FontFeature.tabularFigures()],
-                        ),
-                  ),
-                ],
+              Text(
+                game.version,
+                style: Theme.of(context).textTheme.labelMedium,
               ),
               if (selected) ...[
-                const SizedBox(width: 8),
-                Icon(Icons.check_circle_rounded, color: scheme.primary, size: 20),
+                const SizedBox(width: 6),
+                Icon(
+                  Icons.check_circle_rounded,
+                  color: scheme.primary,
+                  size: 20,
+                ),
               ],
             ],
           ),
@@ -498,8 +448,9 @@ class _AddGameDialogState extends State<_AddGameDialog> {
           : PatchOption.application;
     }
     final scheme = Theme.of(context).colorScheme;
-    final recommended =
-        app.sdk >= 28 ? PatchOption.appComponentFactory : PatchOption.application;
+    final recommended = app.sdk >= 28
+        ? PatchOption.appComponentFactory
+        : PatchOption.application;
     final factoryWarning =
         _option == PatchOption.appComponentFactory && app.sdk < 28;
 
@@ -522,8 +473,8 @@ class _AddGameDialogState extends State<_AddGameDialog> {
                   Text(
                     tr('home.patch.hint'),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                        ),
+                      color: scheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               )
@@ -591,9 +542,9 @@ class _AddGameDialogState extends State<_AddGameDialog> {
                         padding: const EdgeInsets.only(top: 4),
                         child: Text(
                           tr('home.patch.entranceWorng', {'SDK': app.sdk}),
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: scheme.error,
-                              ),
+                          style: Theme.of(
+                            context,
+                          ).textTheme.bodySmall?.copyWith(color: scheme.error),
                         ),
                       ),
                     const SizedBox(height: 10),
@@ -605,8 +556,11 @@ class _AddGameDialogState extends State<_AddGameDialog> {
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.info_outline_rounded,
-                              size: 18, color: scheme.onSurfaceVariant),
+                          Icon(
+                            Icons.info_outline_rounded,
+                            size: 18,
+                            color: scheme.onSurfaceVariant,
+                          ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
@@ -621,10 +575,9 @@ class _AddGameDialogState extends State<_AddGameDialog> {
                       const SizedBox(height: 10),
                       Text(
                         _error!,
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodySmall
-                            ?.copyWith(color: scheme.error),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodySmall?.copyWith(color: scheme.error),
                       ),
                     ],
                   ],
@@ -687,9 +640,9 @@ class _AddGameDialogState extends State<_AddGameDialog> {
 
     if (saved) {
       Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(tr('home.patch.saved'))),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(tr('home.patch.saved'))));
       await app.refreshGames();
     } else {
       setState(() {
@@ -724,10 +677,9 @@ class _StepLine extends StatelessWidget {
             ),
             child: Text(
               '$number',
-              style: Theme.of(context)
-                  .textTheme
-                  .labelSmall
-                  ?.copyWith(color: scheme.onPrimaryContainer),
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: scheme.onPrimaryContainer,
+              ),
             ),
           ),
           const SizedBox(width: 10),

@@ -162,8 +162,7 @@ class EnableList {
     final current = await read();
     if (current.contains(pkgId)) return;
     await file.parent.create(recursive: true);
-    await file.writeAsString('$pkgId\n',
-        mode: FileMode.append, flush: true);
+    await file.writeAsString('$pkgId\n', mode: FileMode.append, flush: true);
   }
 
   Future<void> disable(String pkgId) async {

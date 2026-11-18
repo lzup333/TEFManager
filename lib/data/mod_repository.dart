@@ -18,7 +18,8 @@ class ModStoreEntry {
 }
 
 class ModRepositoryService {
-  ModRepositoryService({http.Client? client}) : _client = client ?? http.Client();
+  ModRepositoryService({http.Client? client})
+    : _client = client ?? http.Client();
 
   final http.Client _client;
 
@@ -49,7 +50,9 @@ class ModRepositoryService {
       }
     }
     final list = entries.values.toList()
-      ..sort((a, b) => a.mod.name.toLowerCase().compareTo(b.mod.name.toLowerCase()));
+      ..sort(
+        (a, b) => a.mod.name.toLowerCase().compareTo(b.mod.name.toLowerCase()),
+      );
     return list;
   }
 
@@ -96,7 +99,8 @@ class ModRepositoryService {
     }
   }
 
-  String _safe(String value) => value.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
+  String _safe(String value) =>
+      value.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
 
   void dispose() => _client.close();
 }

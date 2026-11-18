@@ -46,11 +46,13 @@ class _ModSettingsScreenState extends State<ModSettingsScreen> {
     if (!mounted) return;
     setState(() {
       for (final setting in widget.mod.settings) {
-        _values[setting.key] =
-            stored.containsKey(setting.key) ? stored[setting.key] : setting.defaultValue;
+        _values[setting.key] = stored.containsKey(setting.key)
+            ? stored[setting.key]
+            : setting.defaultValue;
         if (setting.type == ModSettingType.string) {
-          _controllers[setting.key] =
-              TextEditingController(text: '${_values[setting.key] ?? ''}');
+          _controllers[setting.key] = TextEditingController(
+            text: '${_values[setting.key] ?? ''}',
+          );
         }
       }
       _loading = false;
@@ -67,9 +69,9 @@ class _ModSettingsScreenState extends State<ModSettingsScreen> {
     await app.saveModSettings(widget.loaderId, widget.mod.pkgId, _values);
     if (!mounted) return;
     setState(() => _saving = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(tr('mod.settings.saved'))),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(tr('mod.settings.saved'))));
   }
 
   void _resetDefaults() {
@@ -92,7 +94,9 @@ class _ModSettingsScreenState extends State<ModSettingsScreen> {
     }
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.mod.name.isEmpty ? widget.mod.pkgId : widget.mod.name),
+        title: Text(
+          widget.mod.name.isEmpty ? widget.mod.pkgId : widget.mod.name,
+        ),
         actions: [
           IconButton(
             tooltip: tr('mod.settings.save'),
@@ -127,8 +131,8 @@ class _ModSettingsScreenState extends State<ModSettingsScreen> {
                   child: Text(
                     tr('mod.settings.subtitle'),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
                 for (final entry in sections.entries) ...[
@@ -137,14 +141,16 @@ class _ModSettingsScreenState extends State<ModSettingsScreen> {
                       padding: const EdgeInsets.fromLTRB(20, 18, 20, 6),
                       child: Text(
                         entry.key,
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleSmall
-                            ?.copyWith(fontWeight: FontWeight.w700),
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   Card(
-                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 6,
+                    ),
                     child: Column(
                       children: [
                         for (var i = 0; i < entry.value.length; i++) ...[
@@ -163,8 +169,7 @@ class _ModSettingsScreenState extends State<ModSettingsScreen> {
 
   Widget _buildSetting(ModSetting setting) {
     final value = _values[setting.key];
-    final subtitle =
-        setting.description.isEmpty ? null : setting.description;
+    final subtitle = setting.description.isEmpty ? null : setting.description;
     switch (setting.type) {
       case ModSettingType.switchType:
         return SwitchListTile(
@@ -176,7 +181,9 @@ class _ModSettingsScreenState extends State<ModSettingsScreen> {
       case ModSettingType.integer:
         final min = setting.min;
         final max = setting.max > min ? setting.max : null;
-        final current = value is num ? value.toInt() : int.tryParse('$value') ?? min;
+        final current = value is num
+            ? value.toInt()
+            : int.tryParse('$value') ?? min;
         if (max == null) {
           return ListTile(
             title: Text(setting.title),
@@ -188,7 +195,8 @@ class _ModSettingsScreenState extends State<ModSettingsScreen> {
                 textAlign: TextAlign.end,
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                onChanged: (text) => _values[setting.key] = int.tryParse(text) ?? current,
+                onChanged: (text) =>
+                    _values[setting.key] = int.tryParse(text) ?? current,
               ),
             ),
           );
@@ -214,9 +222,8 @@ class _ModSettingsScreenState extends State<ModSettingsScreen> {
                 max: max.toDouble(),
                 divisions: divisions,
                 label: '$clamped',
-                onChanged: (v) => setState(
-                  () => _values[setting.key] = v.round(),
-                ),
+                onChanged: (v) =>
+                    setState(() => _values[setting.key] = v.round()),
               ),
             ),
           ],
@@ -239,7 +246,9 @@ class _ModSettingsScreenState extends State<ModSettingsScreen> {
               for (final option in options)
                 DropdownMenuItem(
                   value: option.value,
-                  child: Text(option.label.isNotEmpty ? option.label : option.value),
+                  child: Text(
+                    option.label.isNotEmpty ? option.label : option.value,
+                  ),
                 ),
             ],
           ),

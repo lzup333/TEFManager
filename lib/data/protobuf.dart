@@ -51,7 +51,8 @@ class PbWriter {
     _out.add(bytes);
   }
 
-  void writeMessage(int field, PbWriter message) => writeBytes(field, message.takeBytes());
+  void writeMessage(int field, PbWriter message) =>
+      writeBytes(field, message.takeBytes());
 }
 
 class PbField {

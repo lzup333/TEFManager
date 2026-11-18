@@ -28,16 +28,18 @@ class SectionHeader extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: theme.textTheme.titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w700),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 if (subtitle != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 2),
                     child: Text(
                       subtitle!,
-                      style: theme.textTheme.bodySmall
-                          ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ),
               ],
@@ -51,12 +53,7 @@ class SectionHeader extends StatelessWidget {
 }
 
 class IconBadge extends StatelessWidget {
-  const IconBadge({
-    super.key,
-    required this.icon,
-    this.color,
-    this.size = 48,
-  });
+  const IconBadge({super.key, required this.icon, this.color, this.size = 48});
 
   final IconData icon;
   final Color? color;
@@ -69,8 +66,8 @@ class IconBadge extends StatelessWidget {
     final foreground = color == null
         ? scheme.onPrimaryContainer
         : (ThemeData.estimateBrightnessForColor(color!) == Brightness.dark
-            ? Colors.white
-            : Colors.black87);
+              ? Colors.white
+              : Colors.black87);
     return Container(
       width: size,
       height: size,
@@ -99,16 +96,19 @@ class MetaChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final (background, foreground) = switch (tone) {
-      ChipTone.neutral => (scheme.surfaceContainerHigh, scheme.onSurfaceVariant),
+      ChipTone.neutral => (
+        scheme.surfaceContainerHigh,
+        scheme.onSurfaceVariant,
+      ),
       ChipTone.primary => (scheme.primaryContainer, scheme.onPrimaryContainer),
       ChipTone.success => (
-          scheme.tertiaryContainer,
-          scheme.onTertiaryContainer,
-        ),
+        scheme.tertiaryContainer,
+        scheme.onTertiaryContainer,
+      ),
       ChipTone.warning => (
-          scheme.errorContainer.withValues(alpha: 0.65),
-          scheme.onErrorContainer,
-        ),
+        scheme.errorContainer.withValues(alpha: 0.65),
+        scheme.onErrorContainer,
+      ),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -125,10 +125,10 @@ class MetaChip extends StatelessWidget {
           ],
           Text(
             label,
-            style: Theme.of(context)
-                .textTheme
-                .labelSmall
-                ?.copyWith(color: foreground, fontWeight: FontWeight.w500),
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: foreground,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       ),
@@ -168,29 +168,31 @@ class EmptyState extends StatelessWidget {
                 color: theme.colorScheme.surfaceContainerHigh,
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon,
-                  size: 40, color: theme.colorScheme.onSurfaceVariant),
+              child: Icon(
+                icon,
+                size: 40,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 20),
             Text(
               title,
               textAlign: TextAlign.center,
-              style: theme.textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w600),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
             ),
             if (message != null) ...[
               const SizedBox(height: 6),
               Text(
                 message!,
                 textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium
-                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
-            if (action != null) ...[
-              const SizedBox(height: 20),
-              action!,
-            ],
+            if (action != null) ...[const SizedBox(height: 20), action!],
           ],
         ),
       ),
@@ -199,12 +201,7 @@ class EmptyState extends StatelessWidget {
 }
 
 class SearchField extends StatelessWidget {
-  const SearchField({
-    super.key,
-    this.controller,
-    this.hint,
-    this.onChanged,
-  });
+  const SearchField({super.key, this.controller, this.hint, this.onChanged});
 
   final TextEditingController? controller;
   final String? hint;
@@ -219,8 +216,9 @@ class SearchField extends StatelessWidget {
         hintText: hint ?? tr('manager.search.hint'),
         leading: const Icon(Icons.search),
         elevation: const WidgetStatePropertyAll(0),
-        backgroundColor:
-            WidgetStatePropertyAll(Theme.of(context).colorScheme.surfaceContainerHigh),
+        backgroundColor: WidgetStatePropertyAll(
+          Theme.of(context).colorScheme.surfaceContainerHigh,
+        ),
         padding: const WidgetStatePropertyAll(
           EdgeInsets.symmetric(horizontal: 16),
         ),

@@ -52,15 +52,22 @@ class UpdateService {
     required ComponentSnapshot components,
   }) {
     final out = <UpdateCandidate>[];
-    void maybe(UpdateTarget target, String title, UpdateEntry? entry, String current) {
+    void maybe(
+      UpdateTarget target,
+      String title,
+      UpdateEntry? entry,
+      String current,
+    ) {
       if (entry == null || entry.newVersion.isEmpty) return;
       if (_isNewer(entry.newVersion, current)) {
-        out.add(UpdateCandidate(
-          target: target,
-          title: title,
-          currentVersion: current,
-          entry: entry,
-        ));
+        out.add(
+          UpdateCandidate(
+            target: target,
+            title: title,
+            currentVersion: current,
+            entry: entry,
+          ),
+        );
       }
     }
 

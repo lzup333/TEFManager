@@ -44,9 +44,11 @@ class SettingsScreen extends StatelessWidget {
                     for (final lang in AppLanguage.values)
                       DropdownMenuItem(
                         value: lang,
-                        child: Text(lang == AppLanguage.system
-                            ? tr('settings.followSystem')
-                            : lang.label),
+                        child: Text(
+                          lang == AppLanguage.system
+                              ? tr('settings.followSystem')
+                              : lang.label,
+                        ),
                       ),
                   ],
                 ),
@@ -98,13 +100,11 @@ class SettingsScreen extends StatelessWidget {
                           ),
                           Text(
                             tr('settings.appearance.fontSizeDec'),
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
+                            style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurfaceVariant,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                                 ),
                           ),
                         ],
@@ -173,17 +173,6 @@ class SettingsScreen extends StatelessWidget {
                 onChanged: (value) =>
                     app.updateConfig((c) => c.maxAppLogSizeMB = value),
               ),
-              const Divider(indent: 16, endIndent: 16),
-              ListTile(
-                title: Text(tr('settings.advanced.clearLogs')),
-                leading: const Icon(Icons.delete_sweep_outlined),
-                onTap: () => _notReady(context),
-              ),
-              ListTile(
-                title: Text(tr('settings.advanced.exportLogs')),
-                leading: const Icon(Icons.ios_share_rounded),
-                onTap: () => _notReady(context),
-              ),
             ],
           ),
           SectionHeader(title: tr('settings.about.title')),
@@ -222,7 +211,7 @@ class SettingsScreen extends StatelessWidget {
               ListTile(
                 leading: const Icon(Icons.code_rounded),
                 title: const Text('GitHub'),
-                subtitle: const Text('eternalfuture-e38299/TEFManager'),
+                subtitle: Text(AppInfo.githubLabel),
                 onTap: () => _notReady(context),
               ),
               ListTile(
@@ -257,15 +246,6 @@ class SettingsScreen extends StatelessWidget {
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton.icon(
-                        onPressed: () => _notReady(context),
-                        icon: const Icon(Icons.upload_file_outlined),
-                        label: Text(tr('settings.about.import')),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
                         onPressed: () => _reinstall(context),
                         icon: const Icon(Icons.build_circle_outlined),
                         label: Text(tr('settings.about.reinstall')),
@@ -282,8 +262,8 @@ class SettingsScreen extends StatelessWidget {
               tr('settings.about.copyright'),
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
         ],
@@ -296,15 +276,15 @@ class SettingsScreen extends StatelessWidget {
     final candidates = await app.checkUpdates();
     if (!context.mounted) return;
     if (candidates == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(tr('update.failed'))),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(tr('update.failed'))));
       return;
     }
     if (candidates.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(tr('update.none'))),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(tr('update.none'))));
       return;
     }
     await showDialog<void>(
@@ -338,7 +318,9 @@ class SettingsScreen extends StatelessWidget {
                             const SizedBox(
                               width: 22,
                               height: 22,
-                              child: CircularProgressIndicator(strokeWidth: 2.5),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                              ),
                             ),
                             const SizedBox(width: 16),
                             Expanded(child: Text(tr('update.downloading'))),
@@ -350,9 +332,9 @@ class SettingsScreen extends StatelessWidget {
                     if (!context.mounted) return;
                     Navigator.of(context, rootNavigator: true).pop();
                     if (error != null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(error)),
-                      );
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text(error)));
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text(tr('update.done'))),
@@ -410,9 +392,9 @@ class SettingsScreen extends StatelessWidget {
   }
 
   void _notReady(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(tr('home.add.notReady'))),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(tr('home.add.notReady'))));
   }
 }
 
@@ -499,10 +481,9 @@ class _NumberTile extends StatelessWidget {
             child: Text(
               '$value',
               textAlign: TextAlign.center,
-              style: Theme.of(context)
-                  .textTheme
-                  .titleSmall
-                  ?.copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
             ),
           ),
           IconButton(

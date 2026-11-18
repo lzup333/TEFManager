@@ -42,8 +42,10 @@ class TefManagerApp extends StatelessWidget {
           final seed = Color(config.themeSeedColor);
           final systemBrightness =
               WidgetsBinding.instance.platformDispatcher.platformBrightness;
-          final visibleBrightness =
-              AppTheme.resolveBrightness(config.themeMode, systemBrightness);
+          final visibleBrightness = AppTheme.resolveBrightness(
+            config.themeMode,
+            systemBrightness,
+          );
 
           return MaterialApp(
             debugShowCheckedModeBanner: false,
@@ -64,8 +66,8 @@ class TefManagerApp extends StatelessWidget {
             home: !controller.ready
                 ? const _BootScreen()
                 : (config.initialized
-                    ? const AppShell()
-                    : const OnboardingScreen()),
+                      ? const AppShell()
+                      : const OnboardingScreen()),
           );
         },
       ),

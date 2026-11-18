@@ -24,8 +24,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   String _currentComponent = '';
   List<BundledStep> _steps = const [];
 
-  List<String> get _componentNames =>
-      ['TEFKernel', for (final m in bundledModules) m.label];
+  List<String> get _componentNames => [
+    'TEFKernel',
+    for (final m in bundledModules) m.label,
+  ];
 
   static const _stepTitleKeys = [
     'onboarding.step.agreement',
@@ -40,10 +42,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   bool get _canContinue => switch (_step) {
-        0 => _agreed,
-        1 => _tips.every((v) => v),
-        _ => true,
-      };
+    0 => _agreed,
+    1 => _tips.every((v) => v),
+    _ => true,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -85,9 +87,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             ),
                             Text(
                               tr(_stepTitleKeys[_step]),
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
+                              style: Theme.of(context).textTheme.bodySmall
                                   ?.copyWith(color: scheme.onSurfaceVariant),
                             ),
                           ],
@@ -95,9 +95,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                       Text(
                         '${_step + 1} / ${_stepTitleKeys.length}',
-                        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                              color: scheme.onSurfaceVariant,
-                            ),
+                        style: Theme.of(context).textTheme.labelMedium
+                            ?.copyWith(color: scheme.onSurfaceVariant),
                       ),
                     ],
                   ),
@@ -156,9 +155,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       else if (!_installDone)
                         FilledButton(
                           onPressed: _installing ? null : _install,
-                          child: Text(_installing
-                              ? tr('onboarding.install.installingButton')
-                              : tr('onboarding.install.button')),
+                          child: Text(
+                            _installing
+                                ? tr('onboarding.install.installingButton')
+                                : tr('onboarding.install.button'),
+                          ),
                         )
                       else
                         FilledButton(
@@ -239,10 +240,7 @@ class _StepCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
       child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: child,
-        ),
+        child: Padding(padding: const EdgeInsets.all(20), child: child),
       ),
     );
   }
@@ -262,17 +260,16 @@ class _AgreementStep extends StatelessWidget {
         children: [
           Text(
             tr('onboarding.agreement.title'),
-            style: Theme.of(context)
-                .textTheme
-                .titleMedium
-                ?.copyWith(fontWeight: FontWeight.w700),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 4),
           Text(
             tr('onboarding.agreement.subtitle'),
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: 12),
           Expanded(
@@ -286,9 +283,9 @@ class _AgreementStep extends StatelessWidget {
               child: SingleChildScrollView(
                 child: Text(
                   tr('onboarding.agreement.text'),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        height: 1.55,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(height: 1.55),
                 ),
               ),
             ),
@@ -321,17 +318,16 @@ class _TipsStep extends StatelessWidget {
         children: [
           Text(
             tr('onboarding.tips.title'),
-            style: Theme.of(context)
-                .textTheme
-                .titleMedium
-                ?.copyWith(fontWeight: FontWeight.w700),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 4),
           Text(
             tr('onboarding.tips.subtitle'),
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: 8),
           Expanded(
@@ -385,23 +381,22 @@ class _InstallStep extends StatelessWidget {
             done
                 ? tr('onboarding.install.completeTitle')
                 : tr('onboarding.install.title'),
-            style: Theme.of(context)
-                .textTheme
-                .titleMedium
-                ?.copyWith(fontWeight: FontWeight.w700),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 4),
           Text(
             done
                 ? tr('onboarding.install.complete')
                 : (installing
-                    ? tr('onboarding.install.installing', {
-                        'component': currentLabel,
-                      })
-                    : tr('onboarding.install.start')),
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
+                      ? tr('onboarding.install.installing', {
+                          'component': currentLabel,
+                        })
+                      : tr('onboarding.install.start')),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
           ),
           const SizedBox(height: 14),
           ClipRRect(
@@ -450,10 +445,9 @@ class _InstallStep extends StatelessWidget {
                           step.error ?? '',
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodySmall
-                              ?.copyWith(color: scheme.error),
+                          style: Theme.of(
+                            context,
+                          ).textTheme.bodySmall?.copyWith(color: scheme.error),
                         )
                       : null,
                   trailing: step == null
@@ -462,8 +456,8 @@ class _InstallStep extends StatelessWidget {
                           label: step.skipped
                               ? tr('onboarding.install.latest')
                               : (step.success
-                                  ? tr('onboarding.install.statusCompleted')
-                                  : tr('onboarding.install.statusFailed')),
+                                    ? tr('onboarding.install.statusCompleted')
+                                    : tr('onboarding.install.statusFailed')),
                           tone: step.success
                               ? ChipTone.success
                               : ChipTone.warning,
@@ -494,8 +488,11 @@ class _InstallStep extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(Icons.info_outline_rounded,
-                    size: 18, color: scheme.onSurfaceVariant),
+                Icon(
+                  Icons.info_outline_rounded,
+                  size: 18,
+                  color: scheme.onSurfaceVariant,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(

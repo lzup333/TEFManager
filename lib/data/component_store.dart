@@ -12,25 +12,25 @@ enum AddonKind { module, plugin, modLoader, mod }
 
 extension AddonKindX on AddonKind {
   String get rootDir => switch (this) {
-        AddonKind.module => 'module',
-        AddonKind.plugin => 'plugin',
-        AddonKind.modLoader => 'modloader',
-        AddonKind.mod => 'mods',
-      };
+    AddonKind.module => 'module',
+    AddonKind.plugin => 'plugin',
+    AddonKind.modLoader => 'modloader',
+    AddonKind.mod => 'mods',
+  };
 
   String get pkgDir => switch (this) {
-        AddonKind.mod => 'mod',
-        _ => 'pkg',
-      };
+    AddonKind.mod => 'mod',
+    _ => 'pkg',
+  };
 
   bool get hasExtension => this != AddonKind.mod;
 
   String get manifestType => switch (this) {
-        AddonKind.module => 'module',
-        AddonKind.plugin => 'plugin',
-        AddonKind.modLoader => 'modloader',
-        AddonKind.mod => 'mod',
-      };
+    AddonKind.module => 'module',
+    AddonKind.plugin => 'plugin',
+    AddonKind.modLoader => 'modloader',
+    AddonKind.mod => 'mod',
+  };
 }
 
 class ComponentSnapshot {
@@ -57,12 +57,14 @@ class ComponentSnapshot {
   final Set<String> enabledLoaders;
   final Map<String, Set<String>> enabledMods;
 
-  bool isEnabled(AddonKind kind, String pkgId, {String? loaderId}) => switch (kind) {
+  bool isEnabled(AddonKind kind, String pkgId, {String? loaderId}) =>
+      switch (kind) {
         AddonKind.module => enabledModules.contains(pkgId),
         AddonKind.plugin => enabledPlugins.contains(pkgId),
         AddonKind.modLoader => enabledLoaders.contains(pkgId),
-        AddonKind.mod =>
-          (enabledMods[loaderId] ?? const <String>{}).contains(pkgId),
+        AddonKind.mod => (enabledMods[loaderId] ?? const <String>{}).contains(
+          pkgId,
+        ),
       };
 }
 
@@ -110,39 +112,43 @@ class ComponentStore {
 
   File packageFile(AddonKind kind, String pkgId, {String? loaderId}) {
     final ext = kind.hasExtension ? '.tefpkg' : '';
-    return File('${kindDir(kind, loaderId: loaderId).path}/${kind.pkgDir}/$pkgId$ext');
+    return File(
+      '${kindDir(kind, loaderId: loaderId).path}/${kind.pkgDir}/$pkgId$ext',
+    );
   }
 
   EnableList _enableList(AddonKind kind, {String? loaderId}) =>
       EnableList(File('${kindDir(kind, loaderId: loaderId).path}/enables.txt'));
 
   LightStore<ModuleItem> _moduleStore() => LightStore(
-        directory: Directory('${kindDir(AddonKind.module).path}/db'),
-        encode: encodeModule,
-        decode: decodeModule,
-        keyOf: (v) => v.pkgId,
-      );
+    directory: Directory('${kindDir(AddonKind.module).path}/db'),
+    encode: encodeModule,
+    decode: decodeModule,
+    keyOf: (v) => v.pkgId,
+  );
 
   LightStore<PluginItem> _pluginStore() => LightStore(
-        directory: Directory('${kindDir(AddonKind.plugin).path}/db'),
-        encode: encodePlugin,
-        decode: decodePlugin,
-        keyOf: (v) => v.pkgId,
-      );
+    directory: Directory('${kindDir(AddonKind.plugin).path}/db'),
+    encode: encodePlugin,
+    decode: decodePlugin,
+    keyOf: (v) => v.pkgId,
+  );
 
   LightStore<ModLoaderItem> _loaderStore() => LightStore(
-        directory: Directory('${kindDir(AddonKind.modLoader).path}/db'),
-        encode: encodeModLoader,
-        decode: decodeModLoader,
-        keyOf: (v) => v.pkgId,
-      );
+    directory: Directory('${kindDir(AddonKind.modLoader).path}/db'),
+    encode: encodeModLoader,
+    decode: decodeModLoader,
+    keyOf: (v) => v.pkgId,
+  );
 
   LightStore<ModItem> _modStore(String loaderId) => LightStore(
-        directory: Directory('${kindDir(AddonKind.mod, loaderId: loaderId).path}/db'),
-        encode: encodeMod,
-        decode: decodeMod,
-        keyOf: (v) => v.pkgId,
-      );
+    directory: Directory(
+      '${kindDir(AddonKind.mod, loaderId: loaderId).path}/db',
+    ),
+    encode: encodeMod,
+    decode: decodeMod,
+    keyOf: (v) => v.pkgId,
+  );
 
   Future<ComponentSnapshot> load() async {
     final modules = await _moduleStore().readAll();
@@ -152,8 +158,10 @@ class ComponentStore {
     final enabledMods = <String, Set<String>>{};
     for (final loader in loaders) {
       mods[loader.pkgId] = await _modStore(loader.pkgId).readAll();
-      enabledMods[loader.pkgId] =
-          await _enableList(AddonKind.mod, loaderId: loader.pkgId).read();
+      enabledMods[loader.pkgId] = await _enableList(
+        AddonKind.mod,
+        loaderId: loader.pkgId,
+      ).read();
     }
     return ComponentSnapshot(
       modules: modules,
@@ -198,8 +206,7 @@ class ComponentStore {
         await store.writeAll(
           (await store.readAll()).where((e) => e.pkgId != pkgId),
         );
-        await kindDir(AddonKind.mod, loaderId: pkgId)
-            .delete(recursive: true);
+        await kindDir(AddonKind.mod, loaderId: pkgId).delete(recursive: true);
       case AddonKind.mod:
         final store = _modStore(loaderId ?? '');
         await store.writeAll(
@@ -246,7 +253,10 @@ class ComponentStore {
     int depth = 0,
   }) async {
     if (depth > 4) {
-      return const InstallResult(success: false, error: 'Nested package too deep');
+      return const InstallResult(
+        success: false,
+        error: 'Nested package too deep',
+      );
     }
     onProgress?.call('opening');
     final Archive archive;
@@ -258,17 +268,22 @@ class ComponentStore {
 
     final manifestEntry = _entry(archive, 'Manifest.json');
     if (manifestEntry == null) {
-      return const InstallResult(success: false, error: 'Missing Manifest.json');
+      return const InstallResult(
+        success: false,
+        error: 'Missing Manifest.json',
+      );
     }
     final Map<String, dynamic> manifest;
     try {
-      manifest = (jsonDecode(_text(manifestEntry)) as Map).cast<String, dynamic>();
+      manifest = (jsonDecode(_text(manifestEntry)) as Map)
+          .cast<String, dynamic>();
     } catch (e) {
       return InstallResult(success: false, error: 'Invalid Manifest.json: $e');
     }
 
     final kernelNode = manifest['tefkernel'];
-    final minKernel = manifest['tefkernelMinVersion']?.toString() ??
+    final minKernel =
+        manifest['tefkernelMinVersion']?.toString() ??
         (kernelNode is Map ? kernelNode['minVersion']?.toString() : null);
     if (minKernel != null &&
         minKernel.isNotEmpty &&
@@ -327,7 +342,10 @@ class ComponentStore {
     }
     final pkgId = json['pkgId']?.toString() ?? '';
     if (pkgId.isEmpty) {
-      return const InstallResult(success: false, error: 'Info.json has no pkgId');
+      return const InstallResult(
+        success: false,
+        error: 'Info.json has no pkgId',
+      );
     }
 
     final payloadPath = manifest['file']?.toString() ?? '';
@@ -352,11 +370,7 @@ class ComponentStore {
     await target.writeAsBytes(payload.content, flush: true);
 
     await _extractIcon(archive, manifest, iconFile(kind, pkgId));
-    await _extractResources(
-      archive,
-      manifest,
-      privateDir(kind, pkgId),
-    );
+    await _extractResources(archive, manifest, privateDir(kind, pkgId));
 
     onProgress?.call('database', detail: pkgId);
     await _put(kind, pkgId, item);
@@ -417,7 +431,10 @@ class ComponentStore {
     }
     final pkgId = json['pkgId']?.toString() ?? '';
     if (pkgId.isEmpty) {
-      return const InstallResult(success: false, error: 'Info.json has no pkgId');
+      return const InstallResult(
+        success: false,
+        error: 'Info.json has no pkgId',
+      );
     }
     final payloadPath = manifest['file']?.toString() ?? '';
     final payload = _entry(archive, payloadPath);
@@ -578,12 +595,12 @@ class ComponentStore {
       utf8.decode(entry.content, allowMalformed: true);
 
   String _nameOf(Object item) => switch (item) {
-        ModuleItem m => m.name,
-        PluginItem p => p.name,
-        ModLoaderItem l => l.name,
-        ModItem m => m.name,
-        _ => '',
-      };
+    ModuleItem m => m.name,
+    PluginItem p => p.name,
+    ModLoaderItem l => l.name,
+    ModItem m => m.name,
+    _ => '',
+  };
 }
 
 bool _isVersionGreater(String v1, String v2) {

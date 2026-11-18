@@ -79,7 +79,8 @@ class _AppShellState extends State<AppShell> {
                 right: false,
                 child: NavigationRail(
                   selectedIndex: _index,
-                  onDestinationSelected: (value) => setState(() => _index = value),
+                  onDestinationSelected: (value) =>
+                      setState(() => _index = value),
                   labelType: NavigationRailLabelType.all,
                   leading: Padding(
                     padding: const EdgeInsets.only(top: 12, bottom: 8),

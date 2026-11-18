@@ -9,25 +9,25 @@ enum AppThemeMode { light, dark, auto, system }
 
 extension AppThemeModeX on AppThemeMode {
   String get storageName => switch (this) {
-        AppThemeMode.light => 'LIGHT',
-        AppThemeMode.dark => 'DARK',
-        AppThemeMode.auto => 'AUTO',
-        AppThemeMode.system => 'SYSTEM',
-      };
+    AppThemeMode.light => 'LIGHT',
+    AppThemeMode.dark => 'DARK',
+    AppThemeMode.auto => 'AUTO',
+    AppThemeMode.system => 'SYSTEM',
+  };
 
   String get labelKey => switch (this) {
-        AppThemeMode.light => 'settings.appearance.lightTheme',
-        AppThemeMode.dark => 'settings.appearance.darkTheme',
-        AppThemeMode.auto => 'settings.appearance.autoTheme',
-        AppThemeMode.system => 'settings.followSystem',
-      };
+    AppThemeMode.light => 'settings.appearance.lightTheme',
+    AppThemeMode.dark => 'settings.appearance.darkTheme',
+    AppThemeMode.auto => 'settings.appearance.autoTheme',
+    AppThemeMode.system => 'settings.followSystem',
+  };
 
   static AppThemeMode parse(String? raw) => switch (raw) {
-        'LIGHT' => AppThemeMode.light,
-        'DARK' => AppThemeMode.dark,
-        'AUTO' => AppThemeMode.auto,
-        _ => AppThemeMode.system,
-      };
+    'LIGHT' => AppThemeMode.light,
+    'DARK' => AppThemeMode.dark,
+    'AUTO' => AppThemeMode.auto,
+    _ => AppThemeMode.system,
+  };
 }
 
 class AppConfig {
@@ -68,23 +68,23 @@ class AppConfig {
   bool redirectSavesEnabled;
 
   Map<String, dynamic> toJson() => {
-        'initialized': initialized,
-        'kernelVersion': kernelVersion,
-        'language': language.storageName,
-        'themeMode': themeMode.storageName,
-        'themeSeedColor': themeSeedColor,
-        'fontSizeScale': fontSizeScale,
-        'autoUpdate': autoUpdate,
-        'dynamicColor': dynamicColor,
-        'kernelLogEnabled': kernelLogEnabled,
-        'softwareLogEnabled': softwareLogEnabled,
-        'autoCleanLogs': autoCleanLogs,
-        'autoCleanTime': autoCleanTime,
-        'maxAppLogFiles': maxAppLogFiles,
-        'maxAppLogSizeMB': maxAppLogSizeMB,
-        'modSupportEnabled': modSupportEnabled,
-        'redirectSavesEnabled': redirectSavesEnabled,
-      };
+    'initialized': initialized,
+    'kernelVersion': kernelVersion,
+    'language': language.storageName,
+    'themeMode': themeMode.storageName,
+    'themeSeedColor': themeSeedColor,
+    'fontSizeScale': fontSizeScale,
+    'autoUpdate': autoUpdate,
+    'dynamicColor': dynamicColor,
+    'kernelLogEnabled': kernelLogEnabled,
+    'softwareLogEnabled': softwareLogEnabled,
+    'autoCleanLogs': autoCleanLogs,
+    'autoCleanTime': autoCleanTime,
+    'maxAppLogFiles': maxAppLogFiles,
+    'maxAppLogSizeMB': maxAppLogSizeMB,
+    'modSupportEnabled': modSupportEnabled,
+    'redirectSavesEnabled': redirectSavesEnabled,
+  };
 
   factory AppConfig.fromJson(Map<String, dynamic> json) {
     int asInt(dynamic v, int fallback) => v is num

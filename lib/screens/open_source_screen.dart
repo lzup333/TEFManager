@@ -81,9 +81,7 @@ class OpenSourceScreen extends StatelessWidget {
                       Expanded(
                         child: Text(
                           'TEFManager',
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
+                          style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(fontWeight: FontWeight.w700),
                         ),
                       ),
@@ -94,9 +92,9 @@ class OpenSourceScreen extends StatelessWidget {
                   Text(
                     tr('oss.projectText'),
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          height: 1.55,
-                          color: scheme.onSurfaceVariant,
-                        ),
+                      height: 1.55,
+                      color: scheme.onSurfaceVariant,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   Wrap(
@@ -131,7 +129,8 @@ class OpenSourceScreen extends StatelessWidget {
             child: Column(
               children: [
                 for (var i = 0; i < _packages.length; i++) ...[
-                  if (i > 0) const Divider(height: 1, indent: 16, endIndent: 16),
+                  if (i > 0)
+                    const Divider(height: 1, indent: 16, endIndent: 16),
                   ListTile(
                     title: Text(_packages[i].name),
                     subtitle: Text(
@@ -168,9 +167,9 @@ class OpenSourceScreen extends StatelessWidget {
             child: Text(
               tr('oss.notice'),
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                    height: 1.5,
-                  ),
+                color: scheme.onSurfaceVariant,
+                height: 1.5,
+              ),
             ),
           ),
         ],

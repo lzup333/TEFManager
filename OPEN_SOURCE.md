@@ -12,7 +12,7 @@ dependencies (Flutter's `showLicensePage`).
 
 | Component | License | Source |
 |---|---|---|
-| TEFManager | AGPL-3.0 | https://github.com/eternalfuture-e38299/TEFManager |
+| TEFManager | AGPL-3.0 | https://github.com/lzup333/TEFManager/tree/release/flutter |
 
 ## Third-party components
 

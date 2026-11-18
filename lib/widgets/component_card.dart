@@ -7,7 +7,12 @@ import '../core/i18n.dart';
 import 'common.dart';
 
 class ComponentIcon extends StatefulWidget {
-  const ComponentIcon({super.key, this.file, this.size = 46, this.fallback = Icons.extension_rounded});
+  const ComponentIcon({
+    super.key,
+    this.file,
+    this.size = 46,
+    this.fallback = Icons.extension_rounded,
+  });
 
   final File? file;
   final double size;
@@ -64,7 +69,8 @@ class _ComponentIconState extends State<ComponentIcon> {
           height: size,
           fit: BoxFit.cover,
           gaplessPlayback: true,
-          errorBuilder: (_, _, _) => IconBadge(icon: widget.fallback, size: size),
+          errorBuilder: (_, _, _) =>
+              IconBadge(icon: widget.fallback, size: size),
         ),
       );
     }
@@ -88,7 +94,6 @@ class ComponentCard extends StatelessWidget {
     this.onToggle,
     this.onTap,
     this.onDelete,
-    this.chips = const [],
     this.essential = false,
     this.hasUpdate = false,
   });
@@ -103,7 +108,6 @@ class ComponentCard extends StatelessWidget {
   final ValueChanged<bool>? onToggle;
   final VoidCallback? onTap;
   final VoidCallback? onDelete;
-  final List<String> chips;
   final bool essential;
   final bool hasUpdate;
 
@@ -137,9 +141,12 @@ class ComponentCard extends StatelessWidget {
                             title.isEmpty ? pkgId : title,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            style: Theme.of(context).textTheme.titleSmall
+                                ?.copyWith(
                                   fontWeight: FontWeight.w600,
-                                  color: dimmed ? scheme.onSurfaceVariant : null,
+                                  color: dimmed
+                                      ? scheme.onSurfaceVariant
+                                      : null,
                                 ),
                           ),
                         ),
@@ -167,8 +174,8 @@ class ComponentCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                          ),
+                        color: scheme.onSurfaceVariant,
+                      ),
                     ),
                     if (author.isNotEmpty) ...[
                       const SizedBox(height: 1),
@@ -177,8 +184,8 @@ class ComponentCard extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              color: scheme.onSurfaceVariant,
-                            ),
+                          color: scheme.onSurfaceVariant,
+                        ),
                       ),
                     ],
                     if (brief != null && brief!.isNotEmpty) ...[
@@ -190,14 +197,6 @@ class ComponentCard extends StatelessWidget {
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],
-                    if (chips.isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 6,
-                        children: [for (final c in chips) MetaChip(label: c)],
-                      ),
-                    ],
                   ],
                 ),
               ),
@@ -206,10 +205,7 @@ class ComponentCard extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (onToggle != null)
-                    Switch(
-                      value: enabled ?? false,
-                      onChanged: onToggle,
-                    ),
+                    Switch(value: enabled ?? false, onChanged: onToggle),
                   if (onDelete != null)
                     PopupMenuButton<String>(
                       tooltip: '',
@@ -233,8 +229,10 @@ class ComponentCard extends StatelessWidget {
                           child: ListTile(
                             dense: true,
                             contentPadding: EdgeInsets.zero,
-                            leading: Icon(Icons.delete_outline_rounded,
-                                color: scheme.error),
+                            leading: Icon(
+                              Icons.delete_outline_rounded,
+                              color: scheme.error,
+                            ),
                             title: Text(
                               tr('manager.action.delete'),
                               style: TextStyle(color: scheme.error),

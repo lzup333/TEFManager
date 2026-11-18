@@ -96,7 +96,11 @@ class _ManagerScreenState extends State<ManagerScreen> {
     return [
       _Category('module', tr('manager.kind.module'), components.modules.length),
       _Category('plugin', tr('manager.kind.plugin'), components.plugins.length),
-      _Category('modloader', tr('manager.kind.loader'), components.loaders.length),
+      _Category(
+        'modloader',
+        tr('manager.kind.loader'),
+        components.loaders.length,
+      ),
       for (final loader in components.loaders)
         _Category(
           'loader:${loader.pkgId}',
@@ -116,7 +120,8 @@ class _ManagerScreenState extends State<ManagerScreen> {
       children: [
         SearchField(
           hint: tr('manager.searchMod'),
-          onChanged: (value) => setState(() => _query = value.trim().toLowerCase()),
+          onChanged: (value) =>
+              setState(() => _query = value.trim().toLowerCase()),
         ),
         SizedBox(
           height: 40,
@@ -163,13 +168,12 @@ class _ManagerScreenState extends State<ManagerScreen> {
         return EmptyState(
           icon: Icons.power_settings_new_rounded,
           title: tr('manager.modloader.disabled'),
-          message: tr('manager.modloader.disabledHint', {'loader': loader.first.name}),
+          message: tr('manager.modloader.disabledHint', {
+            'loader': loader.first.name,
+          }),
           action: FilledButton.icon(
-            onPressed: () => app.setComponentEnabled(
-              AddonKind.modLoader,
-              loaderId,
-              true,
-            ),
+            onPressed: () =>
+                app.setComponentEnabled(AddonKind.modLoader, loaderId, true),
             icon: const Icon(Icons.toggle_on_rounded),
             label: Text(tr('manager.loader.enabled')),
           ),
@@ -178,7 +182,8 @@ class _ManagerScreenState extends State<ManagerScreen> {
       final mods = components.mods[loaderId] ?? const <ModItem>[];
       final filtered = _filter(
         mods,
-        (m) => '${m.name} ${m.pkgId} ${m.author} ${m.brieflyDescribe} ${m.description}',
+        (m) =>
+            '${m.name} ${m.pkgId} ${m.author} ${m.brieflyDescribe} ${m.description}',
       );
       if (filtered.isEmpty) return _empty();
       return ListView.builder(
@@ -197,7 +202,11 @@ class _ManagerScreenState extends State<ManagerScreen> {
               mod.pkgId,
               loaderId: loaderId,
             ),
-            enabled: components.isEnabled(AddonKind.mod, mod.pkgId, loaderId: loaderId),
+            enabled: components.isEnabled(
+              AddonKind.mod,
+              mod.pkgId,
+              loaderId: loaderId,
+            ),
             onToggle: (value) => app.setComponentEnabled(
               AddonKind.mod,
               mod.pkgId,
@@ -213,13 +222,6 @@ class _ManagerScreenState extends State<ManagerScreen> {
               mod.name,
               loaderId: loaderId,
             ),
-            chips: [
-              ...mod.support.supportedPlatforms.take(2),
-              if (mod.experimental) tr('manager.mod.experimental'),
-              if (mod.deprecated) tr('manager.mod.deprecated'),
-              if (mod.stableVerified) tr('manager.mod.verified'),
-              if (mod.hasExtendedContent) tr('manager.mod.extendedContent'),
-            ],
           );
         },
       );
@@ -229,7 +231,8 @@ class _ManagerScreenState extends State<ManagerScreen> {
       case 'module':
         final items = _filter(
           components.modules,
-          (m) => '${m.name} ${m.pkgId} ${m.author} ${m.brieflyDescribe} ${m.description}',
+          (m) =>
+              '${m.name} ${m.pkgId} ${m.author} ${m.brieflyDescribe} ${m.description}',
         );
         if (items.isEmpty) return _empty();
         return ListView.builder(
@@ -245,8 +248,11 @@ class _ManagerScreenState extends State<ManagerScreen> {
               brief: module.brieflyDescribe,
               icon: app.componentStore.iconFile(AddonKind.module, module.pkgId),
               enabled: components.isEnabled(AddonKind.module, module.pkgId),
-              onToggle: (value) =>
-                  app.setComponentEnabled(AddonKind.module, module.pkgId, value),
+              onToggle: (value) => app.setComponentEnabled(
+                AddonKind.module,
+                module.pkgId,
+                value,
+              ),
               onTap: () => _showModuleDetails(context, module),
               onDelete: () => _confirmDelete(
                 context,
@@ -255,7 +261,6 @@ class _ManagerScreenState extends State<ManagerScreen> {
                 module.pkgId,
                 module.name,
               ),
-              chips: module.support.supportedPlatforms.take(2).toList(),
             );
           },
         );
@@ -290,7 +295,8 @@ class _ManagerScreenState extends State<ManagerScreen> {
       case 'modloader':
         final items = _filter(
           components.loaders,
-          (m) => '${m.name} ${m.pkgId} ${m.author} ${m.brieflyDescribe} ${m.description}',
+          (m) =>
+              '${m.name} ${m.pkgId} ${m.author} ${m.brieflyDescribe} ${m.description}',
         );
         if (items.isEmpty) return _empty();
         return ListView.builder(
@@ -298,17 +304,26 @@ class _ManagerScreenState extends State<ManagerScreen> {
           itemCount: items.length,
           itemBuilder: (context, index) {
             final loader = items[index];
-            final enabled = components.isEnabled(AddonKind.modLoader, loader.pkgId);
+            final enabled = components.isEnabled(
+              AddonKind.modLoader,
+              loader.pkgId,
+            );
             return ComponentCard(
               title: loader.name,
               pkgId: loader.pkgId,
               version: loader.version,
               author: loader.author,
               brief: loader.brieflyDescribe,
-              icon: app.componentStore.iconFile(AddonKind.modLoader, loader.pkgId),
+              icon: app.componentStore.iconFile(
+                AddonKind.modLoader,
+                loader.pkgId,
+              ),
               enabled: enabled,
-              onToggle: (value) =>
-                  app.setComponentEnabled(AddonKind.modLoader, loader.pkgId, value),
+              onToggle: (value) => app.setComponentEnabled(
+                AddonKind.modLoader,
+                loader.pkgId,
+                value,
+              ),
               onTap: () => _showLoaderDetails(context, loader, enabled),
               onDelete: () => _confirmDelete(
                 context,
@@ -317,12 +332,6 @@ class _ManagerScreenState extends State<ManagerScreen> {
                 loader.pkgId,
                 loader.name,
               ),
-              chips: [
-                enabled
-                    ? tr('manager.loader.enabled')
-                    : tr('manager.loader.disabled'),
-                ...loader.support.supportedPlatforms.take(2),
-              ],
             );
           },
         );
@@ -359,15 +368,18 @@ class _ManagerScreenState extends State<ManagerScreen> {
     }
 
     final entries = app.storeEntries
-        .where((e) => _storeLoaderFilter == null || e.loaderId == _storeLoaderFilter)
+        .where(
+          (e) => _storeLoaderFilter == null || e.loaderId == _storeLoaderFilter,
+        )
         .where((e) {
-      final q = _query;
-      if (q.isEmpty) return true;
-      final m = e.mod;
-      return '${m.name} ${m.pkgId} ${m.author} ${m.brieflyDescribe} ${m.description}'
-          .toLowerCase()
-          .contains(q);
-    }).toList();
+          final q = _query;
+          if (q.isEmpty) return true;
+          final m = e.mod;
+          return '${m.name} ${m.pkgId} ${m.author} ${m.brieflyDescribe} ${m.description}'
+              .toLowerCase()
+              .contains(q);
+        })
+        .toList();
 
     return Column(
       children: [
@@ -388,13 +400,14 @@ class _ManagerScreenState extends State<ManagerScreen> {
                 final loader = index == 0 ? null : loaders[index - 1];
                 final id = loader?.pkgId;
                 return ChoiceChip(
-                  label: Text(loader == null
-                      ? tr('manager.tab.installed')
-                      : (loader.name.isEmpty ? loader.pkgId : loader.name)),
+                  label: Text(
+                    loader == null
+                        ? tr('manager.tab.installed')
+                        : (loader.name.isEmpty ? loader.pkgId : loader.name),
+                  ),
                   selected: _storeLoaderFilter == id,
                   showCheckmark: false,
-                  onSelected: (_) =>
-                      setState(() => _storeLoaderFilter = id),
+                  onSelected: (_) => setState(() => _storeLoaderFilter = id),
                 );
               },
             ),
@@ -404,30 +417,30 @@ class _ManagerScreenState extends State<ManagerScreen> {
           child: app.storeLoading && app.storeEntries.isEmpty
               ? const Center(child: CircularProgressIndicator())
               : app.storeError != null && app.storeEntries.isEmpty
-                  ? EmptyState(
-                      icon: Icons.cloud_off_rounded,
-                      title: tr('store.error'),
-                      message: app.storeError,
-                      action: FilledButton(
-                        onPressed: () => app.refreshStore(force: true),
-                        child: Text(tr('store.retry')),
-                      ),
-                    )
-                  : entries.isEmpty
-                      ? EmptyState(
-                          icon: Icons.storefront_outlined,
-                          title: tr('store.empty'),
-                          message: tr('store.subtitle'),
-                        )
-                      : RefreshIndicator(
-                          onRefresh: () => app.refreshStore(force: true),
-                          child: ListView.builder(
-                            padding: const EdgeInsets.only(top: 4, bottom: 96),
-                            itemCount: entries.length,
-                            itemBuilder: (context, index) =>
-                                _buildStoreCard(context, app, entries[index]),
-                          ),
-                        ),
+              ? EmptyState(
+                  icon: Icons.cloud_off_rounded,
+                  title: tr('store.error'),
+                  message: app.storeError,
+                  action: FilledButton(
+                    onPressed: () => app.refreshStore(force: true),
+                    child: Text(tr('store.retry')),
+                  ),
+                )
+              : entries.isEmpty
+              ? EmptyState(
+                  icon: Icons.storefront_outlined,
+                  title: tr('store.empty'),
+                  message: tr('store.subtitle'),
+                )
+              : RefreshIndicator(
+                  onRefresh: () => app.refreshStore(force: true),
+                  child: ListView.builder(
+                    padding: const EdgeInsets.only(top: 4, bottom: 96),
+                    itemCount: entries.length,
+                    itemBuilder: (context, index) =>
+                        _buildStoreCard(context, app, entries[index]),
+                  ),
+                ),
         ),
       ],
     );
@@ -444,102 +457,81 @@ class _ManagerScreenState extends State<ManagerScreen> {
     final scheme = Theme.of(context).colorScheme;
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _StoreIcon(url: mod.iconUrl),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        mod.name.isEmpty ? mod.pkgId : mod.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleSmall
-                            ?.copyWith(fontWeight: FontWeight.w600),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '${mod.author} · v${mod.version}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: scheme.onSurfaceVariant,
-                            ),
-                      ),
-                    ],
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: () => _showStoreDetails(context, storeEntry),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _StoreIcon(url: mod.iconUrl),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          mod.name.isEmpty ? mod.pkgId : mod.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.titleSmall
+                              ?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${mod.author} · v${mod.version}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: scheme.onSurfaceVariant),
+                        ),
+                      ],
+                    ),
                   ),
+                  const SizedBox(width: 8),
+                  installed
+                      ? const MetaChip(
+                          label: 'Installed',
+                          tone: ChipTone.success,
+                        )
+                      : FilledButton.tonal(
+                          onPressed: () =>
+                              _downloadStoreEntry(context, app, storeEntry),
+                          child: Text(tr('common.download')),
+                        ),
+                ],
+              ),
+              if (mod.brieflyDescribe.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Text(
+                  mod.brieflyDescribe,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
-                const SizedBox(width: 8),
-                installed
-                    ? const MetaChip(
-                        label: 'Installed',
-                        tone: ChipTone.success,
-                      )
-                    : FilledButton.tonal(
-                        onPressed: () => _downloadStoreEntry(context, app, storeEntry),
-                        child: Text(tr('common.download')),
-                      ),
               ],
-            ),
-            if (mod.brieflyDescribe.isNotEmpty) ...[
-              const SizedBox(height: 10),
+              const SizedBox(height: 6),
               Text(
-                mod.brieflyDescribe,
-                maxLines: 2,
+                [
+                  mod.pkgId,
+                  if (mod.fileSize > 0) formatBytes(mod.fileSize),
+                  storeEntry.loaderName,
+                  if (mod.experimental) tr('manager.mod.experimental'),
+                  if (mod.deprecated) tr('manager.mod.deprecated'),
+                  if (mod.stableVerified) tr('manager.mod.verified'),
+                ].join('  ·  '),
+                maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodySmall,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
               ),
             ],
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: [
-                MetaChip(label: mod.pkgId),
-                if (mod.fileSize > 0)
-                  MetaChip(label: formatBytes(mod.fileSize)),
-                if (mod.sizeCategory != ModSizeCategory.tiny)
-                  MetaChip(label: mod.sizeCategory.name.toUpperCase()),
-                if (mod.stableVerified)
-                  MetaChip(label: tr('manager.mod.verified'), tone: ChipTone.success),
-                if (mod.experimental)
-                  MetaChip(label: tr('manager.mod.experimental'), tone: ChipTone.warning),
-                if (mod.deprecated)
-                  MetaChip(label: tr('manager.mod.deprecated'), tone: ChipTone.warning),
-                for (final feature in mod.features.take(3))
-                  MetaChip(label: _featureLabel(feature), tone: ChipTone.primary),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(Icons.download_for_offline_outlined,
-                    size: 14, color: scheme.onSurfaceVariant),
-                const SizedBox(width: 4),
-                Text(
-                  '${tr('store.source')}: ${storeEntry.loaderName}',
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
-                ),
-                const Spacer(),
-                TextButton(
-                  onPressed: () => _showStoreDetails(context, storeEntry),
-                  child: Text(tr('manager.action.details')),
-                ),
-              ],
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -591,12 +583,15 @@ class _ManagerScreenState extends State<ManagerScreen> {
       version: mod.version,
       versionCode: mod.versionCode,
       author: mod.author,
-      description: mod.description.isEmpty ? mod.brieflyDescribe : mod.description,
+      description: mod.description.isEmpty
+          ? mod.brieflyDescribe
+          : mod.description,
       detailsURL: mod.detailsURL,
       features: mod.features.map(_featureLabel).toList(),
       extra: [
         _Info(tr('store.source'), entry.loaderName),
-        if (mod.fileSize > 0) _Info(tr('store.size'), formatBytes(mod.fileSize)),
+        if (mod.fileSize > 0)
+          _Info(tr('store.size'), formatBytes(mod.fileSize)),
         if (mod.updateLog.isNotEmpty) _Info('Changelog', mod.updateLog),
       ],
     );
@@ -607,9 +602,9 @@ class _ManagerScreenState extends State<ManagerScreen> {
     final paths = await app.pickPackageFiles();
     if (!mounted) return;
     if (paths.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(tr('manager.import.empty'))),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(tr('manager.import.empty'))));
       return;
     }
 
@@ -671,8 +666,8 @@ class _ManagerScreenState extends State<ManagerScreen> {
                 child: Text(
                   '${result.error ?? 'unknown'}\n${tr('manager.install.failDetail')}',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
+                    color: Theme.of(context).colorScheme.error,
+                  ),
                 ),
               ),
           ],
@@ -732,7 +727,9 @@ class _ManagerScreenState extends State<ManagerScreen> {
       version: item.version,
       versionCode: item.versionCode,
       author: item.author,
-      description: item.description.isEmpty ? item.brieflyDescribe : item.description,
+      description: item.description.isEmpty
+          ? item.brieflyDescribe
+          : item.description,
       dependence: item.dependence,
       platforms: item.support.supportedPlatforms,
       detailsURL: item.detailsURL,
@@ -751,7 +748,11 @@ class _ManagerScreenState extends State<ManagerScreen> {
     );
   }
 
-  void _showLoaderDetails(BuildContext context, ModLoaderItem item, bool enabled) {
+  void _showLoaderDetails(
+    BuildContext context,
+    ModLoaderItem item,
+    bool enabled,
+  ) {
     _showDetails(
       context,
       title: item.name,
@@ -759,12 +760,18 @@ class _ManagerScreenState extends State<ManagerScreen> {
       version: item.version,
       versionCode: item.versionCode,
       author: item.author,
-      description: item.description.isEmpty ? item.brieflyDescribe : item.description,
+      description: item.description.isEmpty
+          ? item.brieflyDescribe
+          : item.description,
       dependence: item.dependence,
       platforms: item.support.supportedPlatforms,
       extra: [
-        _Info(tr('manager.loader.enabled'),
-            enabled ? tr('manager.loader.enabled') : tr('manager.loader.disabled')),
+        _Info(
+          tr('manager.loader.enabled'),
+          enabled
+              ? tr('manager.loader.enabled')
+              : tr('manager.loader.disabled'),
+        ),
         if (item.modRepositoryIndexUrl.isNotEmpty)
           _Info('Repository', item.modRepositoryIndexUrl),
       ],
@@ -784,7 +791,9 @@ class _ManagerScreenState extends State<ManagerScreen> {
       version: item.version,
       versionCode: item.versionCode,
       author: item.author,
-      description: item.description.isEmpty ? item.brieflyDescribe : item.description,
+      description: item.description.isEmpty
+          ? item.brieflyDescribe
+          : item.description,
       dependence: item.dependence,
       platforms: item.support.supportedPlatforms,
       detailsURL: item.detailsURL,
@@ -806,10 +815,8 @@ class _ManagerScreenState extends State<ManagerScreen> {
                 Navigator.of(context).pop();
                 Navigator.of(context).push(
                   MaterialPageRoute<void>(
-                    builder: (_) => ModSettingsScreen(
-                      loaderId: loaderId,
-                      mod: item,
-                    ),
+                    builder: (_) =>
+                        ModSettingsScreen(loaderId: loaderId, mod: item),
                   ),
                 );
               },
@@ -843,7 +850,8 @@ class _ManagerScreenState extends State<ManagerScreen> {
       ModFeature.sciFi => 'manager.mod.feature.sci_fi',
       ModFeature.realism => 'manager.mod.feature.realism',
       ModFeature.decoration => 'manager.mod.feature.decoration',
-      ModFeature.multiplayerEnhanced => 'manager.mod.feature.multiplatform_enhanced',
+      ModFeature.multiplayerEnhanced =>
+        'manager.mod.feature.multiplatform_enhanced',
       ModFeature.serverManagement => 'manager.mod.feature.server_management',
       ModFeature.communication => 'manager.mod.feature.communication',
     };
@@ -880,26 +888,25 @@ class _ManagerScreenState extends State<ManagerScreen> {
             children: [
               Text(
                 title.isEmpty ? pkgId : title,
-                style: Theme.of(context)
-                    .textTheme
-                    .titleLarge
-                    ?.copyWith(fontWeight: FontWeight.w700),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 4),
               Text(
                 '$pkgId · v$version ($versionCode)',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodySmall
-                    ?.copyWith(color: scheme.onSurfaceVariant),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
               ),
               if (author.isNotEmpty) ...[
                 const SizedBox(height: 2),
-                Text(author,
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodySmall
-                        ?.copyWith(color: scheme.onSurfaceVariant)),
+                Text(
+                  author,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
               ],
               if (platforms.isNotEmpty) ...[
                 const SizedBox(height: 12),
@@ -927,19 +934,24 @@ class _ManagerScreenState extends State<ManagerScreen> {
               ],
               if (description.isNotEmpty) ...[
                 const SizedBox(height: 16),
-                Text(tr('manager.details'),
-                    style: Theme.of(context).textTheme.titleSmall),
+                Text(
+                  tr('manager.details'),
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
                 const SizedBox(height: 6),
-                Text(description,
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(height: 1.5)),
+                Text(
+                  description,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(height: 1.5),
+                ),
               ],
               if (dependence.isNotEmpty) ...[
                 const SizedBox(height: 16),
-                Text(tr('manager.dependency'),
-                    style: Theme.of(context).textTheme.titleSmall),
+                Text(
+                  tr('manager.dependency'),
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
                 const SizedBox(height: 6),
                 for (final dep in dependence)
                   _DetailRow(
@@ -951,10 +963,12 @@ class _ManagerScreenState extends State<ManagerScreen> {
               ],
               if (detailsURL.isNotEmpty) ...[
                 const SizedBox(height: 16),
-                SelectableText(detailsURL,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: scheme.primary,
-                        )),
+                SelectableText(
+                  detailsURL,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: scheme.primary),
+                ),
               ],
               if (footer != null) ...[
                 const SizedBox(height: 20),
@@ -1001,8 +1015,8 @@ class _DetailRow extends StatelessWidget {
             child: Text(
               label,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
           Expanded(
@@ -1016,7 +1030,6 @@ class _DetailRow extends StatelessWidget {
     );
   }
 }
-
 
 class _StoreIcon extends StatelessWidget {
   const _StoreIcon({required this.url});
@@ -1035,7 +1048,8 @@ class _StoreIcon extends StatelessWidget {
         width: 46,
         height: 46,
         fit: BoxFit.cover,
-        errorBuilder: (_, _, _) => const IconBadge(icon: Icons.extension_rounded),
+        errorBuilder: (_, _, _) =>
+            const IconBadge(icon: Icons.extension_rounded),
       ),
     );
   }

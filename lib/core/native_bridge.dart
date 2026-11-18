@@ -15,8 +15,9 @@ import '../models/models.dart';
 class NativeBridge {
   static final NativeBridge instance = NativeBridge._();
 
-  static const MethodChannel _channel =
-      MethodChannel('eternal.future.tefmanager/native');
+  static const MethodChannel _channel = MethodChannel(
+    'eternal.future.tefmanager/native',
+  );
 
   bool _available = true;
   final StreamController<String> _patchProgress =
@@ -107,10 +108,12 @@ class NativeBridge {
   // Root / external mode
   // ---------------------------------------------------------------------------
 
-  Future<bool> hasRoot() async => await _invoke<bool>('root.hasPermission') ?? false;
+  Future<bool> hasRoot() async =>
+      await _invoke<bool>('root.hasPermission') ?? false;
 
   Future<bool> grantRootAccess(String packageName) async =>
-      await _invoke<bool>('root.grantAccess', {'package': packageName}) ?? false;
+      await _invoke<bool>('root.grantAccess', {'package': packageName}) ??
+      false;
 
   Future<void> startFileProviderService() async =>
       _invoke<void>('service.start');
@@ -143,7 +146,8 @@ class NativeBridge {
     return ok ?? false;
   }
 
-  Future<void> openUrl(String url) async => _invoke<void>('url.open', {'url': url});
+  Future<void> openUrl(String url) async =>
+      _invoke<void>('url.open', {'url': url});
 
   /// Runs the native APK patcher. On success the file at [path] is modified
   /// in place and re-signed with the official certificate.
@@ -153,7 +157,10 @@ class NativeBridge {
       'option': (option ?? PatchOption.appComponentFactory).name,
     });
     if (raw == null) {
-      return const PatchResult(success: false, error: 'Native patcher unavailable');
+      return const PatchResult(
+        success: false,
+        error: 'Native patcher unavailable',
+      );
     }
     return PatchResult(
       success: raw['success'] == true,
@@ -163,13 +170,14 @@ class NativeBridge {
 
   Future<Uint8List?> readAndroidAsset(String name) async {
     try {
-      return await _channel.invokeMethod<Uint8List>('asset.read', {'name': name});
+      return await _channel.invokeMethod<Uint8List>('asset.read', {
+        'name': name,
+      });
     } catch (_) {
       return null;
     }
   }
 }
-
 
 enum PatchOption { application, appComponentFactory }
 
