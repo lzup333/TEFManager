@@ -267,7 +267,9 @@ class ComponentStore {
       return InstallResult(success: false, error: 'Invalid Manifest.json: $e');
     }
 
-    final minKernel = manifest['tefkernelMinVersion']?.toString();
+    final kernelNode = manifest['tefkernel'];
+    final minKernel = manifest['tefkernelMinVersion']?.toString() ??
+        (kernelNode is Map ? kernelNode['minVersion']?.toString() : null);
     if (minKernel != null &&
         minKernel.isNotEmpty &&
         _isVersionGreater(minKernel, kernelVersion)) {

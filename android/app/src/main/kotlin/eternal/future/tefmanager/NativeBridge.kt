@@ -75,6 +75,14 @@ class NativeBridge(
             }
             "file.pick" -> pickFiles(call, result)
             "file.export" -> exportFile(call, result)
+            "asset.read" -> {
+                val name = call.argument<String>("name")
+                if (name.isNullOrBlank()) {
+                    result.success(null)
+                } else {
+                    runAsync(result) { activity.assets.open(name).use { it.readBytes() } }
+                }
+            }
             "url.open" -> {
                 val url = call.argument<String>("url")
                 if (url.isNullOrBlank()) {

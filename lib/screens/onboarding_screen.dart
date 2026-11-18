@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../app.dart';
-import '../core/app_info.dart';
 import '../core/i18n.dart';
+import '../data/bundled_installer.dart';
+import '../widgets/common.dart';
 import 'open_source_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -17,6 +18,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   int _step = 0;
   bool _agreed = false;
   final List<bool> _tips = List.filled(4, false);
+  bool _installing = false;
+  bool _installDone = false;
+  int _installIndex = 0;
+  String _currentComponent = '';
+  List<BundledStep> _steps = const [];
+
+  List<String> get _componentNames =>
+      ['TEFKernel', for (final m in bundledModules) m.label];
 
   static const _stepTitleKeys = [
     'onboarding.step.agreement',
@@ -118,7 +127,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         onChanged: (index, value) =>
                             setState(() => _tips[index] = value),
                       ),
-                      const _ReadyStep(),
+                      _InstallStep(
+                        names: _componentNames,
+                        steps: _steps,
+                        currentIndex: _installIndex,
+                        currentLabel: _currentComponent,
+                        installing: _installing,
+                        done: _installDone,
+                      ),
                     ],
                   ),
                 ),
@@ -136,6 +152,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         FilledButton(
                           onPressed: _canContinue ? _next : null,
                           child: Text(tr('onboarding.next')),
+                        )
+                      else if (!_installDone)
+                        FilledButton(
+                          onPressed: _installing ? null : _install,
+                          child: Text(_installing
+                              ? tr('onboarding.install.installingButton')
+                              : tr('onboarding.install.button')),
                         )
                       else
                         FilledButton(
@@ -171,6 +194,34 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       duration: const Duration(milliseconds: 240),
       curve: Curves.easeOutCubic,
     );
+  }
+
+  Future<void> _install() async {
+    if (_installing) return;
+    setState(() {
+      _installing = true;
+      _installDone = false;
+      _steps = const [];
+      _installIndex = 0;
+      _currentComponent = _componentNames.first;
+    });
+    final app = AppScope.read(context);
+    final steps = await app.installBundledComponents(
+      onProgress: (label, index, total) {
+        if (!mounted) return;
+        setState(() {
+          _installIndex = index;
+          _currentComponent = label;
+        });
+      },
+    );
+    if (!mounted) return;
+    setState(() {
+      _steps = steps;
+      _installing = false;
+      _installDone = true;
+      _installIndex = _componentNames.length;
+    });
   }
 
   Future<void> _finish() async {
@@ -305,44 +356,123 @@ class _TipsStep extends StatelessWidget {
   }
 }
 
-class _ReadyStep extends StatelessWidget {
-  const _ReadyStep();
+class _InstallStep extends StatelessWidget {
+  const _InstallStep({
+    required this.names,
+    required this.steps,
+    required this.currentIndex,
+    required this.currentLabel,
+    required this.installing,
+    required this.done,
+  });
+
+  final List<String> names;
+  final List<BundledStep> steps;
+  final int currentIndex;
+  final String currentLabel;
+  final bool installing;
+  final bool done;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final total = names.length;
     return _StepCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.check_circle_rounded, size: 44, color: scheme.primary),
-          const SizedBox(height: 12),
           Text(
-            tr('onboarding.install.completeTitle'),
+            done
+                ? tr('onboarding.install.completeTitle')
+                : tr('onboarding.install.title'),
             style: Theme.of(context)
                 .textTheme
-                .titleLarge
+                .titleMedium
                 ?.copyWith(fontWeight: FontWeight.w700),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           Text(
-            tr('onboarding.android.tips1'),
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            done
+                ? tr('onboarding.install.complete')
+                : (installing
+                    ? tr('onboarding.install.installing', {
+                        'component': currentLabel,
+                      })
+                    : tr('onboarding.install.start')),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: scheme.onSurfaceVariant,
-                  height: 1.5,
                 ),
           ),
-          const SizedBox(height: 20),
-          _InfoRow(
-            icon: Icons.memory_rounded,
-            label: tr('settings.about.kernelVersion'),
-            value: AppInfo.kernelVersion,
+          const SizedBox(height: 14),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: LinearProgressIndicator(
+              value: total == 0
+                  ? 0
+                  : (done ? total : currentIndex).clamp(0, total) / total,
+              minHeight: 6,
+              backgroundColor: scheme.surfaceContainerHighest,
+            ),
           ),
-          _InfoRow(
-            icon: Icons.android_rounded,
-            label: tr('settings.about.supportPlatforms'),
-            value: 'Android',
+          const SizedBox(height: 14),
+          Expanded(
+            child: ListView.separated(
+              itemCount: total,
+              separatorBuilder: (_, _) => const Divider(height: 1),
+              itemBuilder: (context, index) {
+                final step = index < steps.length ? steps[index] : null;
+                final isCurrent = installing && index == currentIndex;
+                IconData icon;
+                Color color;
+                if (step != null) {
+                  if (step.success) {
+                    icon = step.skipped
+                        ? Icons.skip_next_rounded
+                        : Icons.check_circle_rounded;
+                    color = scheme.primary;
+                  } else {
+                    icon = Icons.error_outline_rounded;
+                    color = scheme.error;
+                  }
+                } else if (isCurrent) {
+                  icon = Icons.downloading_rounded;
+                  color = scheme.primary;
+                } else {
+                  icon = Icons.radio_button_unchecked_rounded;
+                  color = scheme.onSurfaceVariant;
+                }
+                return ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(icon, color: color),
+                  title: Text(names[index]),
+                  subtitle: step != null && !step.success
+                      ? Text(
+                          step.error ?? '',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall
+                              ?.copyWith(color: scheme.error),
+                        )
+                      : null,
+                  trailing: step == null
+                      ? null
+                      : MetaChip(
+                          label: step.skipped
+                              ? tr('onboarding.install.latest')
+                              : (step.success
+                                  ? tr('onboarding.install.statusCompleted')
+                                  : tr('onboarding.install.statusFailed')),
+                          tone: step.success
+                              ? ChipTone.success
+                              : ChipTone.warning,
+                        ),
+                );
+              },
+            ),
           ),
+          const SizedBox(height: 4),
           Align(
             alignment: Alignment.centerLeft,
             child: TextButton.icon(
@@ -356,7 +486,6 @@ class _ReadyStep extends StatelessWidget {
               label: Text(tr('settings.about.openSource')),
             ),
           ),
-          const Spacer(),
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -376,41 +505,6 @@ class _ReadyStep extends StatelessWidget {
                 ),
               ],
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: Theme.of(context).colorScheme.onSurfaceVariant),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(label, style: Theme.of(context).textTheme.bodyMedium),
-          ),
-          Text(
-            value,
-            style: Theme.of(context)
-                .textTheme
-                .labelMedium
-                ?.copyWith(fontWeight: FontWeight.w600),
           ),
         ],
       ),

@@ -262,6 +262,15 @@ class SettingsScreen extends StatelessWidget {
                         label: Text(tr('settings.about.import')),
                       ),
                     ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () => _reinstall(context),
+                        icon: const Icon(Icons.build_circle_outlined),
+                        label: Text(tr('settings.about.reinstall')),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -278,6 +287,40 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Future<void> _reinstall(BuildContext context) async {
+    final app = AppScope.read(context);
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        content: Row(
+          children: [
+            const SizedBox(
+              width: 22,
+              height: 22,
+              child: CircularProgressIndicator(strokeWidth: 2.5),
+            ),
+            const SizedBox(width: 16),
+            Expanded(child: Text(tr('settings.about.reinstalling'))),
+          ],
+        ),
+      ),
+    );
+    final steps = await app.installBundledComponents();
+    if (!context.mounted) return;
+    Navigator.of(context, rootNavigator: true).pop();
+    final failed = steps.where((s) => !s.success).toList();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          failed.isEmpty
+              ? tr('onboarding.install.complete')
+              : failed.map((s) => '${s.name}: ${s.error}').join('\n'),
+        ),
       ),
     );
   }

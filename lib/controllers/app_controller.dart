@@ -7,6 +7,7 @@ import '../models/models.dart';
 import '../core/config.dart';
 import '../core/i18n.dart';
 import '../core/native_bridge.dart';
+import '../data/bundled_installer.dart';
 import '../data/component_store.dart';
 import '../data/mod_repository.dart';
 import '../data/resource_pack_store.dart';
@@ -124,6 +125,32 @@ class AppController extends ChangeNotifier {
     } catch (_) {
       _resources = const ResourcePackSnapshot();
     }
+  }
+
+  Future<List<BundledStep>> installBundledComponents({
+    void Function(String label, int index, int total)? onProgress,
+  }) async {
+    final store = _componentStore;
+    if (store == null) return const [];
+    final installer = BundledInstaller(_dataDir);
+    final steps = await installer.installAll(
+      store: store,
+      onKernelInstalled: (version) async {
+        if (version != null && version.isNotEmpty) {
+          _config.kernelVersion = version;
+          await _configStore.save(_config);
+        }
+        _componentStore = ComponentStore(
+          _dataDir,
+          kernelVersion: _config.kernelVersion,
+        );
+      },
+      onProgress: onProgress,
+    );
+    await _loadComponents();
+    await _loadResources();
+    notifyListeners();
+    return steps;
   }
 
   Future<void> reloadResources() async {

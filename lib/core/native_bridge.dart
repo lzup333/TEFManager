@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
@@ -127,4 +128,12 @@ class NativeBridge {
   }
 
   Future<void> openUrl(String url) async => _invoke<void>('url.open', {'url': url});
+
+  Future<Uint8List?> readAndroidAsset(String name) async {
+    try {
+      return await _channel.invokeMethod<Uint8List>('asset.read', {'name': name});
+    } catch (_) {
+      return null;
+    }
+  }
 }
