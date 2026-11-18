@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../app.dart';
+import '../controllers/app_controller.dart';
 import '../core/i18n.dart';
 import '../core/native_bridge.dart';
 import '../models/models.dart';
@@ -24,17 +25,35 @@ class HomeScreen extends StatelessWidget {
           children: [
             const _BrandMark(),
             const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('TEFManager'),
-                Text(
-                  app.moduleActive ? 'Root / Xposed 模式' : '外部模式',
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+            InkWell(
+              borderRadius: BorderRadius.circular(8),
+              onTap: () => _showModeDialog(context),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('TEFManager'),
+                    Row(
+                      children: [
+                        Text(
+                          app.moduleActive ? tr('mode.root') : tr('mode.external'),
+                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                color:
+                                    Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
+                        ),
+                        const SizedBox(width: 2),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          size: 14,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ],
         ),
@@ -134,7 +153,6 @@ class _SelectedGameCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final app = AppScope.of(context);
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     return Card(
@@ -186,17 +204,176 @@ class _SelectedGameCard extends StatelessWidget {
                   backgroundColor: scheme.onPrimaryContainer,
                   foregroundColor: scheme.primaryContainer,
                 ),
-                onPressed: () async {
-                  final ok = await app.launchSelected();
-                  if (!ok && context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(tr('home.game.launchFailed'))),
-                    );
-                  }
-                },
+                onPressed: () => _launchGame(context),
                 icon: const Icon(Icons.play_arrow_rounded),
                 label: Text(tr('home.game.play')),
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+Future<void> _launchGame(BuildContext context) async {
+  final app = AppScope.read(context);
+  if (app.moduleActive) {
+    final root = await app.hasRoot();
+    if (!context.mounted) return;
+    if (!root) {
+      await _showRootRequired(context);
+      return;
+    }
+  }
+  final ok = await app.launchSelected();
+  if (!ok && context.mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(tr('home.game.launchFailed'))),
+    );
+  }
+}
+
+Future<void> _showRootRequired(BuildContext context) async {
+  final app = AppScope.read(context);
+  await showDialog<void>(
+    context: context,
+    builder: (context) => StatefulBuilder(
+      builder: (context, setState) {
+        return AlertDialog(
+          title: Text(tr('root.required.title')),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(tr('root.required.body')),
+              const SizedBox(height: 12),
+              _RootStatus(app: app),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(tr('close')),
+            ),
+            FilledButton(
+              onPressed: () async {
+                final root = await app.hasRoot();
+                if (!context.mounted) return;
+                if (root) {
+                  Navigator.pop(context);
+                  await _launchGame(context);
+                } else {
+                  setState(() {});
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(tr('root.denied'))),
+                  );
+                }
+              },
+              child: Text(tr('root.required.retry')),
+            ),
+          ],
+        );
+      },
+    ),
+  );
+}
+
+Future<void> _showModeDialog(BuildContext context) async {
+  final app = AppScope.read(context);
+  await showDialog<void>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text(tr('mode.title')),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            app.moduleActive ? tr('mode.root') : tr('mode.external'),
+            style: Theme.of(context)
+                .textTheme
+                .titleSmall
+                ?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            app.moduleActive ? tr('mode.rootDesc') : tr('mode.externalDesc'),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          if (app.moduleActive) ...[
+            const SizedBox(height: 12),
+            _RootStatus(app: app),
+          ],
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(tr('close')),
+        ),
+      ],
+    ),
+  );
+}
+
+class _RootStatus extends StatefulWidget {
+  const _RootStatus({required this.app});
+
+  final AppController app;
+
+  @override
+  State<_RootStatus> createState() => _RootStatusState();
+}
+
+class _RootStatusState extends State<_RootStatus> {
+  bool? _root;
+
+  @override
+  void initState() {
+    super.initState();
+    _check();
+  }
+
+  Future<void> _check() async {
+    final root = await widget.app.hasRoot();
+    if (mounted) setState(() => _root = root);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final root = _root;
+    return InkWell(
+      borderRadius: BorderRadius.circular(10),
+      onTap: _check,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: scheme.surfaceContainerHigh,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (root == null)
+              const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            else
+              Icon(
+                root ? Icons.verified_rounded : Icons.error_outline_rounded,
+                size: 18,
+                color: root ? scheme.primary : scheme.error,
+              ),
+            const SizedBox(width: 8),
+            Text(
+              root == null
+                  ? tr('root.check')
+                  : (root ? tr('root.available') : tr('root.denied')),
+              style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
         ),

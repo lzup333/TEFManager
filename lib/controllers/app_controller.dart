@@ -434,6 +434,8 @@ class AppController extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<bool> hasRoot() => _native.hasRoot();
+
   Future<bool> launchSelected() async {
     final game = _selectedGame;
     if (game == null) return false;
