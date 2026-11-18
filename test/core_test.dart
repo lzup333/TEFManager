@@ -8,6 +8,7 @@ import 'package:tefmanager/data/addon_codec.dart';
 import 'package:tefmanager/data/light_store.dart';
 import 'package:tefmanager/data/component_store.dart';
 import 'package:tefmanager/data/resource_pack_store.dart';
+import 'package:tefmanager/data/mod_settings_store.dart';
 import 'package:archive/archive.dart';
 
 void main() {
@@ -84,6 +85,7 @@ void main() {
 
   _storageTests();
   _installTests();
+  _settingsTests();
 }
 
 // ---------------------------------------------------------------------------
@@ -201,6 +203,20 @@ void _installTests() {
     snapshot = await store.load();
     expect(snapshot.of(PackType.language), isEmpty);
 
+    await dir.delete(recursive: true);
+  });
+}
+
+void _settingsTests() {
+  test('mod settings use the official config.json schema', () async {
+    final dir = await Directory.systemTemp.createTemp('tefmodsettings');
+    await ModSettingsStore.write(dir, {'speed': 3, 'enabled': true, 'name': 'x'});
+    final raw = await File('${dir.path}/config.json').readAsString();
+    expect(raw.contains('"schemaVersion": 1'), isTrue);
+    final values = await ModSettingsStore.read(dir);
+    expect(values['speed'], 3);
+    expect(values['enabled'], isTrue);
+    expect(values['name'], 'x');
     await dir.delete(recursive: true);
   });
 }

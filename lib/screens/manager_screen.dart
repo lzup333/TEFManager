@@ -9,6 +9,7 @@ import '../core/utils.dart';
 import '../models/models.dart';
 import '../widgets/common.dart';
 import '../widgets/component_card.dart';
+import 'mod_settings_screen.dart';
 
 class ManagerScreen extends StatefulWidget {
   const ManagerScreen({super.key});
@@ -798,6 +799,25 @@ class _ManagerScreenState extends State<ManagerScreen> {
           _Info(tr('manager.mod.conflict'), item.conflicts.join(', ')),
       ],
       features: item.features.map(_featureLabel).toList(),
+      footer: item.settings.isEmpty
+          ? null
+          : FilledButton.icon(
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => ModSettingsScreen(
+                      loaderId: loaderId,
+                      mod: item,
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.tune_rounded),
+              label: Text(
+                '${tr('mod.settings.title')} (${item.settings.length})',
+              ),
+            ),
     );
   }
 
@@ -843,6 +863,7 @@ class _ManagerScreenState extends State<ManagerScreen> {
     String detailsURL = '',
     List<_Info> extra = const [],
     List<String> features = const [],
+    Widget? footer,
   }) {
     showModalBottomSheet<void>(
       context: context,
@@ -934,6 +955,10 @@ class _ManagerScreenState extends State<ManagerScreen> {
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: scheme.primary,
                         )),
+              ],
+              if (footer != null) ...[
+                const SizedBox(height: 20),
+                SizedBox(width: double.infinity, child: footer),
               ],
             ],
           ),

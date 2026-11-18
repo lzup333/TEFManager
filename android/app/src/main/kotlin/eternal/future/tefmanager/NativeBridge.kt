@@ -9,6 +9,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.provider.OpenableColumns
+import eternal.future.tefmanager.utils.Patcher
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
@@ -75,6 +76,7 @@ class NativeBridge(
             }
             "file.pick" -> pickFiles(call, result)
             "file.export" -> exportFile(call, result)
+            "apk.patch" -> patchApk(call, result)
             "asset.read" -> {
                 val name = call.argument<String>("name")
                 if (name.isNullOrBlank()) {
@@ -185,6 +187,33 @@ class NativeBridge(
                 false
             }
         }
+    }
+
+    private fun patchApk(call: MethodCall, result: MethodChannel.Result) {
+        val path = call.argument<String>("path")
+        val optionName = call.argument<String>("option") ?: "APP_COMPONENT_FACTORY"
+        if (path.isNullOrBlank()) {
+            result.success(mapOf("success" to false, "error" to "Missing APK path"))
+            return
+        }
+        val option = try {
+            Patcher.PatchOption.valueOf(optionName)
+        } catch (_: Exception) {
+            Patcher.PatchOption.APP_COMPONENT_FACTORY
+        }
+        Thread {
+            val error = Patcher.patch(activity, path, option) { phase ->
+                mainHandler.post {
+                    channel.invokeMethod(
+                        "apk.progress",
+                        mapOf("phase" to phase.key, "code" to phase.name),
+                    )
+                }
+            }
+            mainHandler.post {
+                result.success(mapOf("success" to (error == null), "error" to error))
+            }
+        }.start()
     }
 
     private fun startFileProviderService() {

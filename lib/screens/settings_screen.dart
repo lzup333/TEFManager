@@ -248,7 +248,7 @@ class SettingsScreen extends StatelessWidget {
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton.icon(
-                        onPressed: () => _notReady(context),
+                        onPressed: () => _checkUpdates(context),
                         icon: const Icon(Icons.system_update_alt_rounded),
                         label: Text(tr('settings.about.checkUpdate')),
                       ),
@@ -285,6 +285,90 @@ class SettingsScreen extends StatelessWidget {
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _checkUpdates(BuildContext context) async {
+    final app = AppScope.read(context);
+    final candidates = await app.checkUpdates();
+    if (!context.mounted) return;
+    if (candidates == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(tr('update.failed'))),
+      );
+      return;
+    }
+    if (candidates.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(tr('update.none'))),
+      );
+      return;
+    }
+    await showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(tr('update.title')),
+        content: SizedBox(
+          width: 420,
+          child: ListView.separated(
+            shrinkWrap: true,
+            itemCount: candidates.length,
+            separatorBuilder: (_, _) => const Divider(height: 1),
+            itemBuilder: (context, index) {
+              final item = candidates[index];
+              return ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(item.title),
+                subtitle: Text(
+                  tr('update.current', {'version': item.currentVersion}) +
+                      '  →  ' +
+                      tr('update.latest', {'version': item.latestVersion}),
+                ),
+                trailing: FilledButton(
+                  onPressed: () async {
+                    showDialog<void>(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (context) => AlertDialog(
+                        content: Row(
+                          children: [
+                            const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(strokeWidth: 2.5),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(child: Text(tr('update.downloading'))),
+                          ],
+                        ),
+                      ),
+                    );
+                    final error = await app.applyUpdate(item);
+                    if (!context.mounted) return;
+                    Navigator.of(context, rootNavigator: true).pop();
+                    if (error != null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(error)),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(tr('update.done'))),
+                      );
+                    }
+                  },
+                  child: Text(tr('update.apply')),
+                ),
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(tr('close')),
           ),
         ],
       ),

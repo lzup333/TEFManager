@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -12,14 +13,29 @@ import '../models/models.dart';
 /// patching, foreground service) goes through here; pure-Dart code can be
 /// unit tested without a device.
 class NativeBridge {
-  NativeBridge._();
-
   static final NativeBridge instance = NativeBridge._();
 
   static const MethodChannel _channel =
       MethodChannel('eternal.future.tefmanager/native');
 
   bool _available = true;
+  final StreamController<String> _patchProgress =
+      StreamController<String>.broadcast();
+
+  NativeBridge._() {
+    _channel.setMethodCallHandler((call) async {
+      if (call.method == 'apk.progress') {
+        final args = call.arguments;
+        if (args is Map && args['phase'] is String) {
+          _patchProgress.add(args['phase'] as String);
+        }
+      }
+      return null;
+    });
+  }
+
+  /// Emits i18n keys from `home.patch.progress.*` while patching.
+  Stream<String> get patchProgress => _patchProgress.stream;
 
   bool get isAvailable => _available;
 
@@ -129,6 +145,22 @@ class NativeBridge {
 
   Future<void> openUrl(String url) async => _invoke<void>('url.open', {'url': url});
 
+  /// Runs the native APK patcher. On success the file at [path] is modified
+  /// in place and re-signed with the official certificate.
+  Future<PatchResult> patchApk(String path, {PatchOption? option}) async {
+    final raw = await _invoke<Map>('apk.patch', {
+      'path': path,
+      'option': (option ?? PatchOption.appComponentFactory).name,
+    });
+    if (raw == null) {
+      return const PatchResult(success: false, error: 'Native patcher unavailable');
+    }
+    return PatchResult(
+      success: raw['success'] == true,
+      error: raw['error']?.toString(),
+    );
+  }
+
   Future<Uint8List?> readAndroidAsset(String name) async {
     try {
       return await _channel.invokeMethod<Uint8List>('asset.read', {'name': name});
@@ -136,4 +168,14 @@ class NativeBridge {
       return null;
     }
   }
+}
+
+
+enum PatchOption { application, appComponentFactory }
+
+class PatchResult {
+  const PatchResult({required this.success, this.error});
+
+  final bool success;
+  final String? error;
 }

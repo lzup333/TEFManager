@@ -37,6 +37,18 @@ android {
             signingConfig = signingConfigs.getByName("release")
         }
     }
+
+    packaging {
+        resources {
+            excludes += setOf(
+                "META-INF/LICENSE.md",
+                "META-INF/LICENSE-notice.md",
+                "META-INF/NOTICE.md",
+                "META-INF/AL2.0",
+                "META-INF/LGPL2.1",
+            )
+        }
+    }
 }
 
 kotlin {
@@ -47,6 +59,12 @@ kotlin {
 
 dependencies {
     implementation("androidx.core:core-ktx:1.16.0")
+    implementation("com.android.tools.build:apkzlib:9.2.1")
+    implementation("com.android.tools.build:apksig:9.2.1")
+    implementation("org.bouncycastle:bcprov-jdk18on:1.85")
+    implementation("org.bouncycastle:bcpkix-jdk18on:1.85")
+    implementation(project(":aXML"))
+    implementation(files("libs/ManifestEditor-2.0.jar"))
     // Xposed API is only needed to compile the entry point; LSPosed provides it
     // at runtime inside the hooked process.
     compileOnly("de.robv.android.xposed:api:82")

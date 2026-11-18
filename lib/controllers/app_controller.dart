@@ -4,12 +4,15 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 
 import '../models/models.dart';
+import '../core/app_info.dart';
 import '../core/config.dart';
 import '../core/i18n.dart';
 import '../core/native_bridge.dart';
 import '../data/bundled_installer.dart';
 import '../data/component_store.dart';
 import '../data/mod_repository.dart';
+import '../data/mod_settings_store.dart';
+import '../data/update_service.dart';
 import '../data/resource_pack_store.dart';
 
 /// Central application state.
@@ -33,11 +36,13 @@ class AppController extends ChangeNotifier {
   GameItem? _selectedGame;
   bool _moduleActive = false;
   String _arch = '';
+  int _sdk = 0;
   ComponentSnapshot _components = const ComponentSnapshot();
   ComponentStore? _componentStore;
   ResourcePackSnapshot _resources = const ResourcePackSnapshot();
   ResourcePackStore? _resourceStore;
   final ModRepositoryService _modRepository = ModRepositoryService();
+  final UpdateService _updateService = UpdateService();
   List<ModStoreEntry> _storeEntries = const [];
   bool _storeLoading = false;
   String? _storeError;
@@ -53,6 +58,7 @@ class AppController extends ChangeNotifier {
   GameItem? get selectedGame => _selectedGame;
   bool get moduleActive => _moduleActive;
   String get arch => _arch;
+  int get sdk => _sdk;
   ComponentSnapshot get components => _components;
   ComponentStore get componentStore => _componentStore!;
   ResourcePackSnapshot get resources => _resources;
@@ -75,6 +81,7 @@ class AppController extends ChangeNotifier {
 
       final info = await _native.deviceInfo();
       _arch = info['arch']?.toString() ?? '';
+      _sdk = info['sdk'] is int ? info['sdk'] as int : 0;
       if (info['dynamicColor'] is bool) {
         // Respect the device capability only for the default value; an explicit
         // user setting is preserved from disk.
@@ -293,6 +300,101 @@ class AppController extends ChangeNotifier {
     await _loadComponents();
     notifyListeners();
   }
+
+  Future<List<UpdateCandidate>?> checkUpdates() async {
+    final info = await _updateService.fetch();
+    if (info == null) return null;
+    return _updateService.candidates(
+      info,
+      appVersion: AppInfo.versionName,
+      kernelVersion: _config.kernelVersion,
+      components: _components,
+    );
+  }
+
+  /// Returns null on success, otherwise an error message.
+  Future<String?> applyUpdate(UpdateCandidate candidate) async {
+    if (candidate.target == UpdateTarget.manager) {
+      final url = candidate.entry.externalUrl.isNotEmpty
+          ? candidate.entry.externalUrl
+          : candidate.entry.downloadUrl;
+      if (url.isEmpty) return 'No download URL';
+      await _native.openUrl(url);
+      return null;
+    }
+    final file = await _updateService.writeCache(candidate.entry, _cacheDir);
+    if (file == null) return 'Download failed';
+    try {
+      if (candidate.target == UpdateTarget.kernel) {
+        final installer = BundledInstaller(_dataDir);
+        final bytes = await file.readAsBytes();
+        final version = await installer.installKernelBytes(bytes);
+        if (version != null && version.isNotEmpty) {
+          _config.kernelVersion = version;
+          await _configStore.save(_config);
+        }
+        _componentStore = ComponentStore(
+          _dataDir,
+          kernelVersion: _config.kernelVersion,
+        );
+        await _loadComponents();
+        notifyListeners();
+        return null;
+      }
+      final store = _componentStore;
+      if (store == null) return 'Store unavailable';
+      final result = await store.installFile(file.path);
+      if (!result.success) return result.error ?? 'Install failed';
+      await _loadComponents();
+      await _loadResources();
+      notifyListeners();
+      return null;
+    } finally {
+      try {
+        await file.delete();
+      } catch (_) {}
+    }
+  }
+
+  Future<Map<String, dynamic>> loadModSettings(
+    String loaderId,
+    String pkgId,
+  ) async {
+    final store = _componentStore;
+    if (store == null) return {};
+    return ModSettingsStore.read(
+      store.privateDir(AddonKind.mod, pkgId, loaderId: loaderId),
+    );
+  }
+
+  Future<void> saveModSettings(
+    String loaderId,
+    String pkgId,
+    Map<String, dynamic> values,
+  ) async {
+    final store = _componentStore;
+    if (store == null) return;
+    await ModSettingsStore.write(
+      store.privateDir(AddonKind.mod, pkgId, loaderId: loaderId),
+      values,
+    );
+  }
+
+  Future<List<String>> pickApkFile() => _native.pickFiles(
+        multiple: false,
+        mimeTypes: const [
+          'application/vnd.android.package-archive',
+          'application/octet-stream',
+        ],
+      );
+
+  Future<PatchResult> patchApk(String path, PatchOption option) =>
+      _native.patchApk(path, option: option);
+
+  Future<bool> exportFile(String path, String name) =>
+      _native.exportFile(path, name);
+
+  Stream<String> get patchProgress => _native.patchProgress;
 
   Future<List<String>> pickPackageFiles() => _native.pickFiles(
         multiple: true,

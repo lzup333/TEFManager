@@ -69,7 +69,10 @@ class BundledInstaller {
   }
 
   Future<String?> installKernel() async {
-    final bytes = await loadAsset('tefkernel.zip');
+    return installKernelBytes(await loadAsset('tefkernel.zip'));
+  }
+
+  Future<String?> installKernelBytes(Uint8List bytes) async {
     final archive = ZipDecoder().decodeBytes(bytes);
     final target = Directory('${dataDir.path}/tefkernel');
     await target.create(recursive: true);
