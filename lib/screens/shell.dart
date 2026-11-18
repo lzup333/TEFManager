@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/i18n.dart';
+import '../widgets/common.dart';
 import 'home_screen.dart';
 import 'manager_screen.dart';
 import 'resources_screen.dart';
@@ -124,20 +125,5 @@ class _LogoMark extends StatelessWidget {
   final double size;
 
   @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: scheme.primaryContainer,
-        borderRadius: BorderRadius.circular(size * 0.3),
-      ),
-      child: Icon(
-        Icons.auto_awesome_mosaic_rounded,
-        size: size * 0.55,
-        color: scheme.onPrimaryContainer,
-      ),
-    );
-  }
+  Widget build(BuildContext context) => AppLogo(size: size);
 }

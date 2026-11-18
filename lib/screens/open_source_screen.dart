@@ -76,7 +76,7 @@ class OpenSourceScreen extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.auto_awesome_mosaic_rounded),
+                      const AppLogo(size: 40),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(

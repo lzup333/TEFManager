@@ -61,18 +61,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
                   child: Row(
                     children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: scheme.primaryContainer,
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Icon(
-                          Icons.auto_awesome_mosaic_rounded,
-                          color: scheme.onPrimaryContainer,
-                        ),
-                      ),
+                      const AppLogo(size: 44),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
