@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -6,6 +7,9 @@ import '../models/models.dart';
 import '../core/config.dart';
 import '../core/i18n.dart';
 import '../core/native_bridge.dart';
+import '../data/component_store.dart';
+import '../data/mod_repository.dart';
+import '../data/resource_pack_store.dart';
 
 /// Central application state.
 ///
@@ -28,6 +32,15 @@ class AppController extends ChangeNotifier {
   GameItem? _selectedGame;
   bool _moduleActive = false;
   String _arch = '';
+  ComponentSnapshot _components = const ComponentSnapshot();
+  ComponentStore? _componentStore;
+  ResourcePackSnapshot _resources = const ResourcePackSnapshot();
+  ResourcePackStore? _resourceStore;
+  final ModRepositoryService _modRepository = ModRepositoryService();
+  List<ModStoreEntry> _storeEntries = const [];
+  bool _storeLoading = false;
+  String? _storeError;
+  bool _storeLoaded = false;
 
   bool get ready => _ready;
   bool get busy => _busy;
@@ -39,6 +52,13 @@ class AppController extends ChangeNotifier {
   GameItem? get selectedGame => _selectedGame;
   bool get moduleActive => _moduleActive;
   String get arch => _arch;
+  ComponentSnapshot get components => _components;
+  ComponentStore get componentStore => _componentStore!;
+  ResourcePackSnapshot get resources => _resources;
+  ResourcePackStore get resourceStore => _resourceStore!;
+  List<ModStoreEntry> get storeEntries => _storeEntries;
+  bool get storeLoading => _storeLoading;
+  String? get storeError => _storeError;
 
   AppLanguage get language => _config.language;
   AppThemeMode get themeMode => _config.themeMode;
@@ -65,7 +85,14 @@ class AppController extends ChangeNotifier {
       final systemLocale = info['locale']?.toString();
       await I18n.instance.load(_config.language, systemLocale: systemLocale);
       _moduleActive = await _native.isModuleActive();
+      _componentStore = ComponentStore(
+        _dataDir,
+        kernelVersion: await _readKernelVersion(),
+      );
+      _resourceStore = ResourcePackStore(_dataDir);
       await _loadGames();
+      await _loadComponents();
+      await _loadResources();
 
       _ready = true;
       _error = null;
@@ -76,6 +103,174 @@ class AppController extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<String> _readKernelVersion() async {
+    try {
+      final info = File('${_dataDir.path}/tefkernel/info.json');
+      if (await info.exists()) {
+        final map = jsonDecode(await info.readAsString());
+        if (map is Map && map['version'] != null) {
+          final version = map['version'].toString();
+          if (version.isNotEmpty) return version;
+        }
+      }
+    } catch (_) {}
+    return _config.kernelVersion;
+  }
+
+  Future<void> _loadResources() async {
+    try {
+      _resources = await _resourceStore!.load();
+    } catch (_) {
+      _resources = const ResourcePackSnapshot();
+    }
+  }
+
+  Future<void> reloadResources() async {
+    await _loadResources();
+    notifyListeners();
+  }
+
+  Future<List<PackInstallResult>> installResourcePacks(
+    List<String> paths, {
+    void Function(String phase)? onProgress,
+  }) async {
+    final results = <PackInstallResult>[];
+    final store = _resourceStore;
+    if (store == null) return results;
+    for (final path in paths) {
+      results.add(await store.installFile(path, onProgress: onProgress));
+    }
+    await _loadResources();
+    notifyListeners();
+    return results;
+  }
+
+  Future<void> setResourcePackEnabled(
+    PackType type,
+    ResourcesPackItem pack,
+    bool enabled,
+  ) async {
+    final store = _resourceStore;
+    if (store == null) return;
+    await store.setEnabled(type, pack, enabled);
+    await _loadResources();
+    notifyListeners();
+  }
+
+  Future<void> moveResourcePack(
+    PackType type,
+    String fileName,
+    bool up,
+  ) async {
+    final store = _resourceStore;
+    if (store == null) return;
+    await store.move(type, fileName, up);
+    await _loadResources();
+    notifyListeners();
+  }
+
+  Future<void> deleteResourcePack(
+    PackType type,
+    ResourcesPackItem pack,
+  ) async {
+    final store = _resourceStore;
+    if (store == null) return;
+    await store.delete(type, pack);
+    await _loadResources();
+    notifyListeners();
+  }
+
+  Future<void> refreshStore({bool force = false}) async {
+    if (_storeLoading) return;
+    if (_storeLoaded && !force) return;
+    _storeLoading = true;
+    _storeError = null;
+    notifyListeners();
+    try {
+      _storeEntries = await _modRepository.fetch(
+        _components.loaders,
+        enabledLoaderIds: _components.enabledLoaders,
+      );
+      _storeLoaded = true;
+    } catch (e) {
+      _storeError = '$e';
+    } finally {
+      _storeLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<InstallResult?> downloadAndInstall(ModStoreEntry entry) async {
+    final path = await _modRepository.download(entry.mod, _cacheDir);
+    if (path == null) {
+      return const InstallResult(success: false, error: 'Download failed');
+    }
+    final results = await installPackages([path]);
+    try {
+      await File(path).delete();
+    } catch (_) {}
+    return results.isEmpty ? null : results.first;
+  }
+
+  Future<void> _loadComponents() async {
+    try {
+      _components = await _componentStore!.load();
+    } catch (_) {
+      _components = const ComponentSnapshot();
+    }
+  }
+
+  Future<void> reloadComponents() async {
+    await _loadComponents();
+    notifyListeners();
+  }
+
+  Future<List<InstallResult>> installPackages(
+    List<String> paths, {
+    InstallProgressCallback? onProgress,
+  }) async {
+    final results = <InstallResult>[];
+    final store = _componentStore;
+    if (store == null) return results;
+    for (final path in paths) {
+      final result = await store.installFile(path, onProgress: onProgress);
+      results.add(result);
+    }
+    await _loadComponents();
+    notifyListeners();
+    return results;
+  }
+
+  Future<void> setComponentEnabled(
+    AddonKind kind,
+    String pkgId,
+    bool enabled, {
+    String? loaderId,
+  }) async {
+    final store = _componentStore;
+    if (store == null) return;
+    await store.setEnabled(kind, pkgId, enabled, loaderId: loaderId);
+    await _loadComponents();
+    notifyListeners();
+  }
+
+  Future<void> deleteComponent(
+    AddonKind kind,
+    String pkgId, {
+    String? loaderId,
+  }) async {
+    final store = _componentStore;
+    if (store == null) return;
+    await store.delete(kind, pkgId, loaderId: loaderId);
+    await _loadComponents();
+    notifyListeners();
+  }
+
+  Future<List<String>> pickPackageFiles() => _native.pickFiles(
+        multiple: true,
+        mimeTypes: const ['application/zip', 'application/octet-stream', '*/*'],
+      );
 
   Future<void> _loadGames() async {
     final games = await _native.listGames();
