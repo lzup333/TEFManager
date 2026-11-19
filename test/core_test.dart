@@ -9,6 +9,7 @@ import 'package:tefmanager/data/light_store.dart';
 import 'package:tefmanager/data/component_store.dart';
 import 'package:tefmanager/data/resource_pack_store.dart';
 import 'package:tefmanager/data/mod_settings_store.dart';
+import 'package:tefmanager/data/bundled_installer.dart';
 import 'package:archive/archive.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -90,6 +91,7 @@ void main() {
   _installTests();
   _settingsTests();
   _storeTests();
+  _kernelTests();
 }
 
 // ---------------------------------------------------------------------------
@@ -301,5 +303,34 @@ void _storeTests() {
     expect(entries.map((e) => e.mod.pkgId).toList(), ['b', 'a', 'c']);
     // The duplicate keeps its first position but uses the newer version.
     expect(entries[1].mod.versionCode, 2);
+  });
+}
+
+void _kernelTests() {
+  test('kernel import extracts info.json and libraries', () async {
+    final dir = await Directory.systemTemp.createTemp('tefkernel');
+    final archive = Archive()
+      ..add(
+        ArchiveFile.string('info.json', '{"version":"1.4.1","versionCode":1}'),
+      )
+      ..add(ArchiveFile.bytes('libtefkernel.android.arm64-v8a.so', [1, 2, 3]));
+    final version = await BundledInstaller(
+      dir,
+    ).installKernelBytes(ZipEncoder().encodeBytes(archive));
+    expect(version, '1.4.1');
+    expect(await File('${dir.path}/tefkernel/info.json').exists(), isTrue);
+    expect(
+      await File(
+        '${dir.path}/tefkernel/libtefkernel.android.arm64-v8a.so',
+      ).exists(),
+      isTrue,
+    );
+
+    final bad = Archive()..add(ArchiveFile.string('readme.txt', 'no kernel'));
+    await expectLater(
+      BundledInstaller(dir).installKernelBytes(ZipEncoder().encodeBytes(bad)),
+      throwsA(isA<FormatException>()),
+    );
+    await dir.delete(recursive: true);
   });
 }

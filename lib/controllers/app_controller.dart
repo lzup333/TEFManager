@@ -134,6 +134,25 @@ class AppController extends ChangeNotifier {
     }
   }
 
+  /// Installs a user-selected kernel ZIP (same layout as the bundled one:
+  /// `info.json` + the per-ABI `.so` files).
+  Future<String> importKernel(String path) async {
+    final bytes = await File(path).readAsBytes();
+    final installer = BundledInstaller(_dataDir);
+    final version = await installer.installKernelBytes(bytes);
+    _config.kernelVersion = version;
+    await _configStore.save(_config);
+    _componentStore = ComponentStore(_dataDir, kernelVersion: version);
+    await _loadComponents();
+    notifyListeners();
+    return version;
+  }
+
+  Future<List<String>> pickKernelFile() => _native.pickFiles(
+    multiple: false,
+    mimeTypes: const ['application/zip', 'application/octet-stream'],
+  );
+
   Future<List<BundledStep>> installBundledComponents({
     void Function(String label, int index, int total)? onProgress,
   }) async {
@@ -322,10 +341,8 @@ class AppController extends ChangeNotifier {
         final installer = BundledInstaller(_dataDir);
         final bytes = await file.readAsBytes();
         final version = await installer.installKernelBytes(bytes);
-        if (version != null && version.isNotEmpty) {
-          _config.kernelVersion = version;
-          await _configStore.save(_config);
-        }
+        _config.kernelVersion = version;
+        await _configStore.save(_config);
         _componentStore = ComponentStore(
           _dataDir,
           kernelVersion: _config.kernelVersion,

@@ -68,11 +68,11 @@ class BundledInstaller {
     return bytes;
   }
 
-  Future<String?> installKernel() async {
+  Future<String> installKernel() async {
     return installKernelBytes(await loadAsset('tefkernel.zip'));
   }
 
-  Future<String?> installKernelBytes(Uint8List bytes) async {
+  Future<String> installKernelBytes(Uint8List bytes) async {
     final archive = ZipDecoder().decodeBytes(bytes);
     final target = Directory('${dataDir.path}/tefkernel');
     await target.create(recursive: true);
@@ -92,6 +92,11 @@ class BundledInstaller {
           }
         } catch (_) {}
       }
+    }
+    if (version == null || version.isEmpty) {
+      throw const FormatException(
+        'Kernel package is missing a valid info.json',
+      );
     }
     return version;
   }

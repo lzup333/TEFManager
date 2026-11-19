@@ -69,6 +69,9 @@ class I18n {
       'mode.title': '运行模式',
       'mode.rootDesc': '由 Xposed 注入内核，无需修补 APK。',
       'mode.externalDesc': '需要先修补游戏 APK，并保持管理器后台运行。',
+      'settings.about.importing': '正在导入内核…',
+      'kernel.import.success': '内核已导入：\${version}',
+      'kernel.import.failed': '内核导入失败',
       'mod.settings.title': '模组设置',
       'mod.settings.subtitle': '这些值由模组自身读取与校验，保存后写入模组私有目录。',
       'mod.settings.save': '保存设置',
@@ -180,6 +183,9 @@ class I18n {
           'Xposed injects the kernel; the APK does not need patching.',
       'mode.externalDesc':
           'Patch the game APK first and keep the manager in background.',
+      'settings.about.importing': 'Importing kernel…',
+      'kernel.import.success': 'Kernel imported: \${version}',
+      'kernel.import.failed': 'Kernel import failed',
       'mod.settings.title': 'Mod settings',
       'mod.settings.subtitle':
           'Values are read and validated by the mod itself and stored in its private directory.',
@@ -295,6 +301,9 @@ class I18n {
       'mode.title': 'Режим работы',
       'mode.rootDesc': 'Xposed внедряет ядро, патчить APK не нужно.',
       'mode.externalDesc': 'Сначала пропатчите APK и держите менеджер в фоне.',
+      'settings.about.importing': 'Импорт ядра…',
+      'kernel.import.success': 'Ядро импортировано: \${version}',
+      'kernel.import.failed': 'Не удалось импортировать ядро',
       'mod.settings.title': 'Настройки мода',
       'mod.settings.subtitle':
           'Значения читает и проверяет сам мод; они сохраняются в его приватной папке.',

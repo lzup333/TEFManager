@@ -246,6 +246,15 @@ class SettingsScreen extends StatelessWidget {
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton.icon(
+                        onPressed: () => _importKernel(context),
+                        icon: const Icon(Icons.upload_file_outlined),
+                        label: Text(tr('settings.about.import')),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
                         onPressed: () => _reinstall(context),
                         icon: const Icon(Icons.build_circle_outlined),
                         label: Text(tr('settings.about.reinstall')),
@@ -267,6 +276,53 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Future<void> _importKernel(BuildContext context) async {
+    final app = AppScope.read(context);
+    final paths = await app.pickKernelFile();
+    if (!context.mounted) return;
+    if (paths.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(tr('manager.import.empty'))));
+      return;
+    }
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        content: Row(
+          children: [
+            const SizedBox(
+              width: 22,
+              height: 22,
+              child: CircularProgressIndicator(strokeWidth: 2.5),
+            ),
+            const SizedBox(width: 16),
+            Expanded(child: Text(tr('settings.about.importing'))),
+          ],
+        ),
+      ),
+    );
+    String? version;
+    String? error;
+    try {
+      version = await app.importKernel(paths.first);
+    } catch (e) {
+      error = '$e';
+    }
+    if (!context.mounted) return;
+    Navigator.of(context, rootNavigator: true).pop();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          version != null
+              ? tr('kernel.import.success', {'version': version})
+              : '${tr('kernel.import.failed')}: ${error ?? ''}',
+        ),
       ),
     );
   }
