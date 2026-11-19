@@ -48,6 +48,7 @@ class AppConfig {
     this.maxAppLogSizeMB = 5,
     this.modSupportEnabled = true,
     this.redirectSavesEnabled = false,
+    this.backgroundImage = '',
   });
 
   bool initialized;
@@ -66,6 +67,9 @@ class AppConfig {
   int maxAppLogSizeMB;
   bool modSupportEnabled;
   bool redirectSavesEnabled;
+
+  /// File name under `<files>/backgrounds/`, or an absolute path.
+  String backgroundImage;
 
   Map<String, dynamic> toJson() => {
     'initialized': initialized,
@@ -113,6 +117,7 @@ class AppConfig {
       maxAppLogSizeMB: asInt(json['maxAppLogSizeMB'], 5),
       modSupportEnabled: asBool(json['modSupportEnabled'], true),
       redirectSavesEnabled: asBool(json['redirectSavesEnabled'], false),
+      backgroundImage: json['backgroundImage']?.toString() ?? '',
     );
   }
 }

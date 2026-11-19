@@ -10,6 +10,7 @@ import '../core/i18n.dart';
 import '../core/native_bridge.dart';
 import '../data/bundled_installer.dart';
 import '../data/component_store.dart';
+import '../data/instance_store.dart';
 import '../data/mod_repository.dart';
 import '../data/mod_settings_store.dart';
 import '../data/update_service.dart';
@@ -29,7 +30,10 @@ class AppController extends ChangeNotifier {
   bool _busy = false;
   String? _error;
   late AppConfig _config;
+  late Directory _rootDir;
   late Directory _dataDir;
+  late InstanceStore _instanceStore;
+  InstanceState? _instanceState;
   late Directory _cacheDir;
   late ConfigStore _configStore;
   List<GameItem> _games = const [];
@@ -52,8 +56,27 @@ class AppController extends ChangeNotifier {
   bool get busy => _busy;
   String? get error => _error;
   AppConfig get config => _config;
+  Directory get rootDir => _rootDir;
   Directory get dataDir => _dataDir;
   Directory get cacheDir => _cacheDir;
+  InstanceState get instances =>
+      _instanceState ??
+      const InstanceState(
+        activeId: InstanceStore.defaultId,
+        items: [
+          AppInstance(id: InstanceStore.defaultId, name: '默认实例', builtIn: true),
+        ],
+      );
+  AppInstance get activeInstance => instances.active;
+  String get backgroundImagePath {
+    final value = _config.backgroundImage;
+    if (value.isEmpty) return '';
+    final path = value.startsWith('/')
+        ? value
+        : '${_rootDir.path}/backgrounds/$value';
+    return File(path).existsSync() ? path : '';
+  }
+
   List<GameItem> get games => _games;
   GameItem? get selectedGame => _selectedGame;
   bool get moduleActive => _moduleActive;
@@ -74,10 +97,14 @@ class AppController extends ChangeNotifier {
     _busy = true;
     notifyListeners();
     try {
-      _dataDir = await _native.resolveDataDir();
+      _rootDir = await _native.resolveDataDir();
       _cacheDir = await _native.resolveExternalCacheDir();
-      _configStore = ConfigStore(File('${_dataDir.path}/app_config.json'));
+      _configStore = ConfigStore(File('${_rootDir.path}/app_config.json'));
       _config = await _configStore.load();
+
+      _instanceStore = InstanceStore(_rootDir);
+      _instanceState = await _instanceStore.load();
+      _dataDir = _instanceStore.dirFor(_instanceState!.activeId);
 
       final info = await _native.deviceInfo();
       _arch = info['arch']?.toString() ?? '';
@@ -85,7 +112,7 @@ class AppController extends ChangeNotifier {
       if (info['dynamicColor'] is bool) {
         // Respect the device capability only for the default value; an explicit
         // user setting is preserved from disk.
-        if (!File('${_dataDir.path}/app_config.json').existsSync()) {
+        if (!File('${_rootDir.path}/app_config.json').existsSync()) {
           _config.dynamicColor = info['dynamicColor'] as bool;
         }
       }
@@ -114,7 +141,7 @@ class AppController extends ChangeNotifier {
 
   Future<String> _readKernelVersion() async {
     try {
-      final info = File('${_dataDir.path}/tefkernel/info.json');
+      final info = File('${_rootDir.path}/tefkernel/info.json');
       if (await info.exists()) {
         final map = jsonDecode(await info.readAsString());
         if (map is Map && map['version'] != null) {
@@ -138,7 +165,7 @@ class AppController extends ChangeNotifier {
   /// `info.json` + the per-ABI `.so` files).
   Future<String> importKernel(String path) async {
     final bytes = await File(path).readAsBytes();
-    final installer = BundledInstaller(_dataDir);
+    final installer = BundledInstaller(_rootDir);
     final version = await installer.installKernelBytes(bytes);
     _config.kernelVersion = version;
     await _configStore.save(_config);
@@ -158,7 +185,7 @@ class AppController extends ChangeNotifier {
   }) async {
     final store = _componentStore;
     if (store == null) return const [];
-    final installer = BundledInstaller(_dataDir);
+    final installer = BundledInstaller(_rootDir);
     final steps = await installer.installAll(
       store: store,
       onKernelInstalled: (version) async {
@@ -338,7 +365,7 @@ class AppController extends ChangeNotifier {
     if (file == null) return 'Download failed';
     try {
       if (candidate.target == UpdateTarget.kernel) {
-        final installer = BundledInstaller(_dataDir);
+        final installer = BundledInstaller(_rootDir);
         final bytes = await file.readAsBytes();
         final version = await installer.installKernelBytes(bytes);
         _config.kernelVersion = version;
@@ -488,6 +515,159 @@ class AppController extends ChangeNotifier {
     _config.fontSizeScale = clamped;
     notifyListeners();
     await _configStore.save(_config);
+  }
+
+  // -------------------------------------------------------------------------
+  // Background image
+  // -------------------------------------------------------------------------
+
+  Future<bool> pickBackgroundImage() async {
+    final paths = await _native.pickFiles(
+      multiple: false,
+      mimeTypes: const ['image/*'],
+    );
+    if (paths.isEmpty) return false;
+    final source = File(paths.first);
+    if (!await source.exists()) return false;
+    final nameParts = source.path.split('/').last.split('.');
+    final ext = nameParts.length > 1 ? nameParts.last.toLowerCase() : 'png';
+    final dir = Directory('${_rootDir.path}/backgrounds');
+    await dir.create(recursive: true);
+    final fileName = 'bg_${DateTime.now().millisecondsSinceEpoch}.$ext';
+    await source.copy('${dir.path}/$fileName');
+
+    final previous = _config.backgroundImage;
+    _config.backgroundImage = fileName;
+    await _configStore.save(_config);
+    if (previous.isNotEmpty && !previous.startsWith('/')) {
+      try {
+        final old = File('${dir.path}/$previous');
+        if (await old.exists()) await old.delete();
+      } catch (_) {}
+    }
+    notifyListeners();
+    return true;
+  }
+
+  Future<void> clearBackgroundImage() async {
+    final previous = _config.backgroundImage;
+    if (previous.isEmpty) return;
+    _config.backgroundImage = '';
+    await _configStore.save(_config);
+    if (!previous.startsWith('/')) {
+      try {
+        final file = File('${_rootDir.path}/backgrounds/$previous');
+        if (await file.exists()) await file.delete();
+      } catch (_) {}
+    }
+    notifyListeners();
+  }
+
+  // -------------------------------------------------------------------------
+  // Instances
+  // -------------------------------------------------------------------------
+
+  Future<void> _applyInstanceState(InstanceState state) async {
+    _instanceState = state;
+    _dataDir = _instanceStore.dirFor(state.activeId);
+    _componentStore = ComponentStore(
+      _dataDir,
+      kernelVersion: _config.kernelVersion,
+    );
+    _resourceStore = ResourcePackStore(_dataDir);
+    _storeEntries = const [];
+    _storeError = null;
+    _storeLoaded = false;
+    await _loadComponents();
+    await _loadResources();
+    notifyListeners();
+    // Repository contents are instance-specific; refresh in the background.
+    refreshStore(force: true);
+  }
+
+  Future<void> switchInstance(String id) async {
+    if (instances.activeId == id) return;
+    final state = await _instanceStore.setActive(instances, id);
+    await _applyInstanceState(state);
+  }
+
+  Future<AppInstance> createInstance(
+    String name, {
+    bool cloneCurrent = false,
+  }) async {
+    final state = await _instanceStore.create(
+      instances,
+      name: name,
+      cloneFromId: cloneCurrent ? instances.activeId : null,
+    );
+    final created = state.items.last;
+    await switchInstance(created.id);
+    return created;
+  }
+
+  Future<AppInstance> cloneInstance(AppInstance source) async {
+    final state = await _instanceStore.create(
+      instances,
+      name: '${source.name} 副本',
+      cloneFromId: source.id,
+    );
+    final created = state.items.last;
+    await switchInstance(created.id);
+    return created;
+  }
+
+  Future<AppInstance?> importInstance(String path) async {
+    try {
+      final bytes = await File(path).readAsBytes();
+      final (state, id) = await _instanceStore.importZip(instances, bytes);
+      final created = state.items.firstWhere((e) => e.id == id);
+      final kernelVersion = await _readKernelVersion();
+      if (kernelVersion != _config.kernelVersion) {
+        _config.kernelVersion = kernelVersion;
+        await _configStore.save(_config);
+      }
+      await switchInstance(created.id);
+      return created;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> deleteInstance(AppInstance instance) async {
+    if (instance.isDefault) return;
+    final state = await _instanceStore.delete(instances, instance.id);
+    if (state.activeId != instances.activeId) {
+      await _applyInstanceState(state);
+    } else {
+      _instanceState = state;
+      notifyListeners();
+    }
+  }
+
+  /// Writes a shareable ZIP into the cache and returns its path.
+  ///
+  /// Always contains TEFLoader, TEFKernel and mods; resource packs are opt-in.
+  Future<String?> exportInstance(
+    AppInstance instance, {
+    bool includeResourcePacks = false,
+  }) async {
+    try {
+      final loader = await _native.readAndroidAsset('tefloader.dex');
+      final bytes = await _instanceStore.exportZip(
+        instance,
+        includeResourcePacks: includeResourcePacks,
+        loaderBytes: loader,
+      );
+      final safeName = instance.name.replaceAll(
+        RegExp(r'[^\w\u4e00-\u9fa5.-]'),
+        '_',
+      );
+      final file = File('${_cacheDir.path}/$safeName.tefinstance.zip');
+      await file.writeAsBytes(bytes, flush: true);
+      return file.path;
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<void> updateConfig(void Function(AppConfig config) change) async {

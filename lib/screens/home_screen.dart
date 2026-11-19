@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../app.dart';
+import 'instance_screen.dart';
 import '../controllers/app_controller.dart';
 import '../core/i18n.dart';
 import '../core/native_bridge.dart';
@@ -22,6 +23,14 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('TEFManager'),
         actions: [
+          IconButton(
+            tooltip:
+                '${tr('instance.current')}: ${app.activeInstance.isDefault ? tr('instance.default') : app.activeInstance.name}',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const InstanceScreen()),
+            ),
+            icon: const Icon(Icons.layers_outlined),
+          ),
           IconButton(
             tooltip: app.moduleActive ? tr('mode.root') : tr('mode.external'),
             onPressed: () => _showModeDialog(context),

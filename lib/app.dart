@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import '../controllers/app_controller.dart';
@@ -46,6 +48,8 @@ class TefManagerApp extends StatelessWidget {
             config.themeMode,
             systemBrightness,
           );
+          final backgroundPath = controller.backgroundImagePath;
+          final hasBackground = backgroundPath.isNotEmpty;
 
           return MaterialApp(
             debugShowCheckedModeBanner: false,
@@ -53,14 +57,27 @@ class TefManagerApp extends StatelessWidget {
             themeMode: visibleBrightness == Brightness.light
                 ? ThemeMode.light
                 : ThemeMode.dark,
-            theme: AppTheme.light(seed),
-            darkTheme: AppTheme.dark(seed),
+            theme: AppTheme.light(seed, transparentScaffold: hasBackground),
+            darkTheme: AppTheme.dark(seed, transparentScaffold: hasBackground),
             builder: (context, child) {
               final scale = config.fontSizeScale.clamp(0.5, 2.0);
               final media = MediaQuery.of(context);
-              return MediaQuery(
+              final content = MediaQuery(
                 data: media.copyWith(textScaler: TextScaler.linear(scale)),
                 child: child ?? const SizedBox.shrink(),
+              );
+              if (!hasBackground) return content;
+              return Stack(
+                fit: StackFit.expand,
+                children: [
+                  Image.file(
+                    File(backgroundPath),
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, _, _) => const SizedBox.expand(),
+                  ),
+                  ColoredBox(color: Colors.black.withValues(alpha: 0.45)),
+                  Positioned.fill(child: content),
+                ],
               );
             },
             home: !controller.ready

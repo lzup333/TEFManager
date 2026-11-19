@@ -5,11 +5,17 @@ import '../core/config.dart';
 class AppTheme {
   const AppTheme._();
 
-  static ThemeData light(Color seed) => _build(Brightness.light, seed);
+  static ThemeData light(Color seed, {bool transparentScaffold = false}) =>
+      _build(Brightness.light, seed, transparentScaffold);
 
-  static ThemeData dark(Color seed) => _build(Brightness.dark, seed);
+  static ThemeData dark(Color seed, {bool transparentScaffold = false}) =>
+      _build(Brightness.dark, seed, transparentScaffold);
 
-  static ThemeData _build(Brightness brightness, Color seed) {
+  static ThemeData _build(
+    Brightness brightness,
+    Color seed,
+    bool transparentScaffold,
+  ) {
     final scheme = ColorScheme.fromSeed(
       seedColor: seed,
       brightness: brightness,
@@ -18,7 +24,9 @@ class AppTheme {
       useMaterial3: true,
       brightness: brightness,
       colorScheme: scheme,
-      scaffoldBackgroundColor: scheme.surface,
+      scaffoldBackgroundColor: transparentScaffold
+          ? Colors.transparent
+          : scheme.surface,
       visualDensity: VisualDensity.standard,
     );
 

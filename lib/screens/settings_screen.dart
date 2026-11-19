@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import '../app.dart';
@@ -5,6 +7,7 @@ import '../core/app_info.dart';
 import '../core/config.dart';
 import '../core/i18n.dart';
 import '../widgets/common.dart';
+import 'instance_screen.dart';
 import 'open_source_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -53,6 +56,21 @@ class SettingsScreen extends StatelessWidget {
                   ],
                 ),
               ),
+              const Divider(indent: 16, endIndent: 16),
+              ListTile(
+                leading: const Icon(Icons.layers_outlined),
+                title: Text(tr('settings.general.instance')),
+                subtitle: Text(
+                  '${app.activeInstance.isDefault ? tr('instance.default') : app.activeInstance.name}'
+                  ' · ${app.instances.items.length}',
+                ),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const InstanceScreen(),
+                  ),
+                ),
+              ),
             ],
           ),
           SectionHeader(title: tr('settings.appearance.title')),
@@ -83,6 +101,8 @@ class SettingsScreen extends StatelessWidget {
                 value: config.dynamicColor,
                 onChanged: app.setDynamicColor,
               ),
+              const Divider(indent: 16, endIndent: 16),
+              const _BackgroundTile(),
               const Divider(indent: 16, endIndent: 16),
               _SeedColorTile(color: Color(config.themeSeedColor)),
               const Divider(indent: 16, endIndent: 16),
@@ -451,6 +471,55 @@ class SettingsScreen extends StatelessWidget {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(tr('home.add.notReady'))));
+  }
+}
+
+class _BackgroundTile extends StatelessWidget {
+  const _BackgroundTile();
+
+  @override
+  Widget build(BuildContext context) {
+    final app = AppScope.of(context);
+    final path = app.backgroundImagePath;
+    final hasImage = path.isNotEmpty && File(path).existsSync();
+    return ListTile(
+      leading: hasImage
+          ? ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.file(
+                File(path),
+                width: 40,
+                height: 40,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => const Icon(Icons.image_outlined),
+              ),
+            )
+          : const Icon(Icons.image_outlined),
+      title: Text(tr('settings.appearance.background')),
+      subtitle: Text(
+        hasImage
+            ? path.split('/').last
+            : tr('settings.appearance.backgroundDesc'),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (hasImage)
+            IconButton(
+              tooltip: tr('settings.appearance.clearBackground'),
+              onPressed: app.clearBackgroundImage,
+              icon: const Icon(Icons.close_rounded),
+            ),
+          IconButton(
+            tooltip: tr('settings.appearance.chooseBackground'),
+            onPressed: () => app.pickBackgroundImage(),
+            icon: const Icon(Icons.add_photo_alternate_outlined),
+          ),
+        ],
+      ),
+    );
   }
 }
 
