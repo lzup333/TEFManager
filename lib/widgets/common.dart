@@ -18,7 +18,7 @@ class SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 12, 8),
+      padding: const EdgeInsets.fromLTRB(20, 24, 16, 10),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -210,7 +210,7 @@ class SearchField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
       child: SearchBar(
         controller: controller,
         hintText: hint ?? tr('manager.search.hint'),
@@ -222,6 +222,7 @@ class SearchField extends StatelessWidget {
         padding: const WidgetStatePropertyAll(
           EdgeInsets.symmetric(horizontal: 16),
         ),
+        constraints: const BoxConstraints(minHeight: 48),
         shape: WidgetStatePropertyAll(
           RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         ),
@@ -240,6 +241,7 @@ class SettingCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      clipBehavior: Clip.antiAlias,
       child: Column(children: children),
     );
   }

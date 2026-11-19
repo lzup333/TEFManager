@@ -359,9 +359,9 @@ class SettingsScreen extends StatelessWidget {
                 contentPadding: EdgeInsets.zero,
                 title: Text(item.title),
                 subtitle: Text(
-                  tr('update.current', {'version': item.currentVersion}) +
-                      '  →  ' +
-                      tr('update.latest', {'version': item.latestVersion}),
+                  '${tr('update.current', {'version': item.currentVersion})}'
+                  '  →  '
+                  '${tr('update.latest', {'version': item.latestVersion})}',
                 ),
                 trailing: FilledButton(
                   onPressed: () async {

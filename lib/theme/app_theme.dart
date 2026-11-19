@@ -27,7 +27,10 @@ class AppTheme {
         centerTitle: false,
         backgroundColor: scheme.surface,
         surfaceTintColor: Colors.transparent,
-        scrolledUnderElevation: 0.5,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        toolbarHeight: 64,
+        titleSpacing: 20,
         titleTextStyle: base.textTheme.titleLarge?.copyWith(
           fontWeight: FontWeight.w600,
           color: scheme.onSurface,
@@ -37,7 +40,10 @@ class AppTheme {
         elevation: 0,
         margin: EdgeInsets.zero,
         color: scheme.surfaceContainerLow,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+          side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.3)),
+        ),
       ),
       listTileTheme: const ListTileThemeData(
         contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 2),
@@ -60,6 +66,9 @@ class AppTheme {
       navigationRailTheme: NavigationRailThemeData(
         backgroundColor: scheme.surfaceContainerLow,
         indicatorColor: scheme.primaryContainer,
+        groupAlignment: -0.7,
+        minWidth: 80,
+        minExtendedWidth: 220,
         selectedLabelTextStyle: base.textTheme.labelMedium?.copyWith(
           color: scheme.onSurface,
           fontWeight: FontWeight.w600,
@@ -107,6 +116,7 @@ class AppTheme {
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        insetPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       ),
       dialogTheme: DialogThemeData(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),

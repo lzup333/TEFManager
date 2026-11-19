@@ -559,7 +559,7 @@ class _ManagerScreenState extends State<ManagerScreen> {
       ),
     );
     final result = await app.downloadAndInstall(entry);
-    if (!mounted) return;
+    if (!context.mounted) return;
     Navigator.of(context, rootNavigator: true).pop();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -597,7 +597,7 @@ class _ManagerScreenState extends State<ManagerScreen> {
   Future<void> _importPackages(BuildContext context) async {
     final app = AppScope.read(context);
     final paths = await app.pickPackageFiles();
-    if (!mounted) return;
+    if (!context.mounted) return;
     if (paths.isEmpty) {
       ScaffoldMessenger.of(
         context,
@@ -641,7 +641,7 @@ class _ManagerScreenState extends State<ManagerScreen> {
       },
     );
 
-    if (!mounted) return;
+    if (!context.mounted) return;
     Navigator.of(context, rootNavigator: true).pop();
     setState(() => _busy = false);
     status.dispose();
@@ -710,7 +710,7 @@ class _ManagerScreenState extends State<ManagerScreen> {
     );
     if (ok != true) return;
     await app.deleteComponent(kind, pkgId, loaderId: loaderId);
-    if (!mounted) return;
+    if (!context.mounted) return;
     setState(() {
       if (loaderId != null) _category = 'loader:$loaderId';
     });

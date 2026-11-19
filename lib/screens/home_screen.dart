@@ -119,7 +119,7 @@ class _SelectedGameCard extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     return Card(
-      margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      margin: EdgeInsets.zero,
       color: scheme.surfaceContainerLow,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(18, 16, 18, 14),

@@ -117,6 +117,7 @@ class ComponentCard extends StatelessWidget {
     final dimmed = enabled == false;
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
         onTap: onTap,
@@ -205,7 +206,13 @@ class ComponentCard extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (onToggle != null)
-                    Switch(value: enabled ?? false, onChanged: onToggle),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 4),
+                      child: Switch(
+                        value: enabled ?? false,
+                        onChanged: onToggle,
+                      ),
+                    ),
                   if (onDelete != null)
                     PopupMenuButton<String>(
                       tooltip: '',

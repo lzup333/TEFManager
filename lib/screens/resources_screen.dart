@@ -136,6 +136,7 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
     final canReorder = _type != PackType.font;
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
         onTap: () => _showDetails(context, pack, index, enabled),
@@ -276,7 +277,7 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
     try {
       await app.setResourcePackEnabled(_type, pack, value);
     } catch (_) {
-      if (!mounted) return;
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -322,7 +323,7 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
   Future<void> _importPacks(BuildContext context) async {
     final app = AppScope.read(context);
     final paths = await app.pickPackageFiles();
-    if (!mounted) return;
+    if (!context.mounted) return;
     if (paths.isEmpty) {
       ScaffoldMessenger.of(
         context,
@@ -360,7 +361,7 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
       paths,
       onProgress: (phase) => status.value = tr('resource.installing'),
     );
-    if (!mounted) return;
+    if (!context.mounted) return;
     Navigator.of(context, rootNavigator: true).pop();
     setState(() => _busy = false);
     status.dispose();
