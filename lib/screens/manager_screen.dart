@@ -47,6 +47,16 @@ class _ManagerScreenState extends State<ManagerScreen> {
       appBar: AppBar(
         title: Text(tr('manager.title')),
         actions: [
+          if (_tab == 0 && _category.startsWith('loader:'))
+            IconButton(
+              tooltip: tr('manager.group.manage'),
+              onPressed: () => _showGroupManager(
+                context,
+                app,
+                _category.substring('loader:'.length),
+              ),
+              icon: const Icon(Icons.folder_outlined),
+            ),
           IconButton(
             tooltip: tr('manager.add'),
             onPressed: _busy ? null : () => _importPackages(context),
@@ -186,44 +196,67 @@ class _ManagerScreenState extends State<ManagerScreen> {
             '${m.name} ${m.pkgId} ${m.author} ${m.brieflyDescribe} ${m.description}',
       );
       if (filtered.isEmpty) return _empty();
-      return ListView.builder(
+
+      final groups = app.modGroups.groups;
+      if (groups.isEmpty || _query.isNotEmpty) {
+        return ListView.builder(
+          padding: const EdgeInsets.only(bottom: 96),
+          itemCount: filtered.length,
+          itemBuilder: (context, index) => _buildModCard(
+            context,
+            app,
+            components,
+            loaderId,
+            filtered[index],
+          ),
+        );
+      }
+
+      final buckets = <String, List<ModItem>>{
+        for (final group in groups) group.id: [],
+        '': [],
+      };
+      for (final mod in filtered) {
+        final gid = app.modGroups.groupIdOf(loaderId, mod.pkgId) ?? '';
+        buckets.putIfAbsent(gid, () => []).add(mod);
+      }
+
+      final children = <Widget>[];
+      for (final group in groups) {
+        final items = buckets[group.id] ?? const <ModItem>[];
+        if (items.isEmpty) continue;
+        children.add(
+          _ModGroupHeader(
+            name: group.name,
+            count: items.length,
+            onRename: () => _renameGroup(context, app, group.id, group.name),
+            onDelete: () => _deleteGroup(context, app, group.id, group.name),
+          ),
+        );
+        children.addAll(
+          items.map(
+            (mod) => _buildModCard(context, app, components, loaderId, mod),
+          ),
+        );
+      }
+      final ungrouped = buckets[''] ?? const <ModItem>[];
+      if (ungrouped.isNotEmpty) {
+        children.add(
+          _ModGroupHeader(
+            name: tr('manager.group.ungrouped'),
+            count: ungrouped.length,
+          ),
+        );
+        children.addAll(
+          ungrouped.map(
+            (mod) => _buildModCard(context, app, components, loaderId, mod),
+          ),
+        );
+      }
+      if (children.isEmpty) return _empty();
+      return ListView(
         padding: const EdgeInsets.only(bottom: 96),
-        itemCount: filtered.length,
-        itemBuilder: (context, index) {
-          final mod = filtered[index];
-          return ComponentCard(
-            title: mod.name,
-            pkgId: mod.pkgId,
-            version: mod.version,
-            author: mod.author,
-            brief: mod.brieflyDescribe,
-            icon: app.componentStore.iconFile(
-              AddonKind.mod,
-              mod.pkgId,
-              loaderId: loaderId,
-            ),
-            enabled: components.isEnabled(
-              AddonKind.mod,
-              mod.pkgId,
-              loaderId: loaderId,
-            ),
-            onToggle: (value) => app.setComponentEnabled(
-              AddonKind.mod,
-              mod.pkgId,
-              value,
-              loaderId: loaderId,
-            ),
-            onTap: () => _showModDetails(context, app, mod, loaderId),
-            onDelete: () => _confirmDelete(
-              context,
-              app,
-              AddonKind.mod,
-              mod.pkgId,
-              mod.name,
-              loaderId: loaderId,
-            ),
-          );
-        },
+        children: children,
       );
     }
 
@@ -337,6 +370,296 @@ class _ManagerScreenState extends State<ManagerScreen> {
         );
     }
     return _empty();
+  }
+
+  Widget _buildModCard(
+    BuildContext context,
+    AppController app,
+    ComponentSnapshot components,
+    String loaderId,
+    ModItem mod,
+  ) {
+    final hasGroups = app.modGroups.groups.isNotEmpty;
+    return ComponentCard(
+      title: mod.name,
+      pkgId: mod.pkgId,
+      version: mod.version,
+      author: mod.author,
+      brief: mod.brieflyDescribe,
+      icon: app.componentStore.iconFile(
+        AddonKind.mod,
+        mod.pkgId,
+        loaderId: loaderId,
+      ),
+      enabled: components.isEnabled(
+        AddonKind.mod,
+        mod.pkgId,
+        loaderId: loaderId,
+      ),
+      onToggle: (value) => app.setComponentEnabled(
+        AddonKind.mod,
+        mod.pkgId,
+        value,
+        loaderId: loaderId,
+      ),
+      onTap: () => _showModDetails(context, app, mod, loaderId),
+      onDelete: () => _confirmDelete(
+        context,
+        app,
+        AddonKind.mod,
+        mod.pkgId,
+        mod.name,
+        loaderId: loaderId,
+      ),
+      onMoveGroup: hasGroups
+          ? () => _showMoveGroup(context, app, loaderId, mod)
+          : () => _showGroupManager(context, app, loaderId),
+    );
+  }
+
+  Future<void> _showGroupManager(
+    BuildContext context,
+    AppController app,
+    String loaderId,
+  ) async {
+    final nameController = TextEditingController();
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          final groups = app.modGroups.groups;
+          return Padding(
+            padding: EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: 8,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  tr('manager.group.title'),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: nameController,
+                        decoration: InputDecoration(
+                          hintText: tr('manager.group.hint'),
+                          isDense: true,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    FilledButton(
+                      onPressed: () async {
+                        final name = nameController.text.trim();
+                        if (name.isEmpty) return;
+                        await app.createModGroup(name);
+                        nameController.clear();
+                        setSheetState(() {});
+                      },
+                      child: Text(tr('manager.group.create')),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                if (groups.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: Text(
+                      tr('manager.group.empty'),
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  )
+                else
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxHeight: 320),
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: groups.length,
+                      itemBuilder: (context, index) {
+                        final group = groups[index];
+                        return ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: const Icon(Icons.folder_outlined),
+                          title: Text(group.name),
+                          subtitle: Text(
+                            tr('manager.group.count', {
+                              'count':
+                                  app.components.mods[loaderId]
+                                      ?.where(
+                                        (m) =>
+                                            app.modGroups.groupIdOf(
+                                              loaderId,
+                                              m.pkgId,
+                                            ) ==
+                                            group.id,
+                                      )
+                                      .length ??
+                                  0,
+                            }),
+                          ),
+                          trailing: PopupMenuButton<String>(
+                            onSelected: (value) async {
+                              if (value == 'rename') {
+                                await _renameGroup(
+                                  context,
+                                  app,
+                                  group.id,
+                                  group.name,
+                                );
+                              } else if (value == 'delete') {
+                                await _deleteGroup(
+                                  context,
+                                  app,
+                                  group.id,
+                                  group.name,
+                                );
+                              }
+                              setSheetState(() {});
+                            },
+                            itemBuilder: (context) => [
+                              PopupMenuItem(
+                                value: 'rename',
+                                child: Text(tr('manager.group.rename')),
+                              ),
+                              PopupMenuItem(
+                                value: 'delete',
+                                child: Text(tr('manager.group.delete')),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+    nameController.dispose();
+  }
+
+  Future<void> _showMoveGroup(
+    BuildContext context,
+    AppController app,
+    String loaderId,
+    ModItem mod,
+  ) async {
+    final current = app.modGroups.groupIdOf(loaderId, mod.pkgId) ?? '';
+    final selected = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(tr('manager.group.move')),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            RadioListTile<String>(
+              contentPadding: EdgeInsets.zero,
+              value: '',
+              groupValue: current,
+              title: Text(tr('manager.group.none')),
+              onChanged: (value) => Navigator.pop(context, value),
+            ),
+            for (final group in app.modGroups.groups)
+              RadioListTile<String>(
+                contentPadding: EdgeInsets.zero,
+                value: group.id,
+                groupValue: current,
+                title: Text(group.name),
+                onChanged: (value) => Navigator.pop(context, value),
+              ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(tr('cancel')),
+          ),
+        ],
+      ),
+    );
+    if (selected == null) return;
+    await app.assignModToGroup(
+      loaderId,
+      mod.pkgId,
+      selected.isEmpty ? null : selected,
+    );
+  }
+
+  Future<void> _renameGroup(
+    BuildContext context,
+    AppController app,
+    String id,
+    String currentName,
+  ) async {
+    final controller = TextEditingController(text: currentName);
+    final name = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(tr('manager.group.rename')),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: InputDecoration(labelText: tr('manager.group.name')),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(tr('cancel')),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, controller.text.trim()),
+            child: Text(tr('confirm')),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (name != null && name.isNotEmpty) {
+      await app.renameModGroup(id, name);
+    }
+  }
+
+  Future<void> _deleteGroup(
+    BuildContext context,
+    AppController app,
+    String id,
+    String name,
+  ) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(tr('manager.delete.title', {'name': name})),
+        content: Text(tr('manager.group.deleteBody')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(tr('cancel')),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(tr('delete')),
+          ),
+        ],
+      ),
+    );
+    if (ok == true) await app.deleteModGroup(id);
   }
 
   List<T> _filter<T>(List<T> items, String Function(T item) haystack) {
@@ -605,6 +928,61 @@ class _ManagerScreenState extends State<ManagerScreen> {
       return;
     }
 
+    final bundles = await app.inspectBundles(paths);
+    if (!mounted) return;
+    if (bundles.isNotEmpty) {
+      final bundleFiles = bundles.map((b) => b.path).toSet();
+      final total =
+          bundles.fold<int>(0, (sum, bundle) => sum + bundle.members.length) +
+          paths.where((p) => !bundleFiles.contains(p)).length;
+      final names = <String>[
+        for (final bundle in bundles)
+          for (final member in bundle.members) member.split('/').last,
+      ];
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(tr('manager.bundle.title')),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(tr('manager.bundle.body', {'count': total})),
+              const SizedBox(height: 10),
+              for (final name in names.take(8))
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 2),
+                  child: Text(
+                    '• $name',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+              if (names.length > 8)
+                Text(
+                  tr('manager.bundle.listMore', {'count': names.length - 8}),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(tr('cancel')),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(tr('manager.bundle.continue')),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true) return;
+    }
+
     final status = ValueNotifier<String>(tr('manager.install.status.ready'));
     setState(() => _busy = true);
 
@@ -635,6 +1013,16 @@ class _ManagerScreenState extends State<ManagerScreen> {
     final results = await app.installPackages(
       paths,
       onProgress: (phase, {detail}) {
+        if (phase == 'bundle' && detail != null && detail.contains('|')) {
+          final parts = detail.split('|');
+          final counter = parts.first.split('/');
+          status.value = tr('manager.install.bundle', {
+            'index': counter.first,
+            'total': counter.length > 1 ? counter[1] : '?',
+            'name': parts.sublist(1).join('|'),
+          });
+          return;
+        }
         status.value = detail == null || detail.isEmpty
             ? tr('manager.install.$phase')
             : '${tr('manager.install.$phase')}: $detail';
@@ -975,6 +1363,66 @@ class _ManagerScreenState extends State<ManagerScreen> {
           ),
         );
       },
+    );
+  }
+}
+
+class _ModGroupHeader extends StatelessWidget {
+  const _ModGroupHeader({
+    required this.name,
+    required this.count,
+    this.onRename,
+    this.onDelete,
+  });
+
+  final String name;
+  final int count;
+  final VoidCallback? onRename;
+  final VoidCallback? onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 14, 8, 4),
+      child: Row(
+        children: [
+          Icon(
+            Icons.folder_rounded,
+            size: 16,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              '$name · $count',
+              style: Theme.of(
+                context,
+              ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w600),
+            ),
+          ),
+          if (onRename != null || onDelete != null)
+            PopupMenuButton<String>(
+              tooltip: '',
+              iconSize: 18,
+              onSelected: (value) {
+                if (value == 'rename') onRename?.call();
+                if (value == 'delete') onDelete?.call();
+              },
+              itemBuilder: (context) => [
+                if (onRename != null)
+                  PopupMenuItem(
+                    value: 'rename',
+                    child: Text(tr('manager.group.rename')),
+                  ),
+                if (onDelete != null)
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: Text(tr('manager.group.delete')),
+                  ),
+              ],
+            ),
+        ],
+      ),
     );
   }
 }

@@ -156,6 +156,10 @@ class InstanceStore {
   }
 
   Future<void> _copyData(Directory from, Directory to) async {
+    final groups = File('${from.path}/mod_groups.json');
+    if (await groups.exists()) {
+      await groups.copy('${to.path}/mod_groups.json');
+    }
     for (final name in dataDirs) {
       final source = Directory('${from.path}/$name');
       if (!await source.exists()) continue;
@@ -292,6 +296,16 @@ class InstanceStore {
           ),
         );
       }
+    }
+
+    final groupsFile = File('${dir.path}/mod_groups.json');
+    if (await groupsFile.exists()) {
+      archive.add(
+        ArchiveFile.bytes(
+          'data/mod_groups.json',
+          await groupsFile.readAsBytes(),
+        ),
+      );
     }
 
     for (final name in dataDirs) {

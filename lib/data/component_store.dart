@@ -68,6 +68,13 @@ class ComponentSnapshot {
       };
 }
 
+class BundleInfo {
+  const BundleInfo({required this.path, required this.members});
+
+  final String path;
+  final List<String> members;
+}
+
 class InstallResult {
   const InstallResult({
     required this.success,
@@ -214,8 +221,8 @@ class ComponentStore {
         );
     }
     await _enableList(kind, loaderId: loaderId).disable(pkgId);
-    _tryDelete(await packageFile(kind, pkgId, loaderId: loaderId));
-    _tryDelete(await iconFile(kind, pkgId, loaderId: loaderId));
+    _tryDelete(packageFile(kind, pkgId, loaderId: loaderId));
+    _tryDelete(iconFile(kind, pkgId, loaderId: loaderId));
     _tryDeleteDir(privateDir(kind, pkgId, loaderId: loaderId));
   }
 
@@ -322,6 +329,111 @@ class ComponentStore {
       return _installMod(archive, manifest, onProgress: onProgress);
     }
     return _installAddon(kind, archive, manifest, onProgress: onProgress);
+  }
+
+  /// Detects a "bundle" ZIP: a plain archive containing multiple addon
+  /// packages (.tefpkg / .zip) instead of a single Manifest.json at its root.
+  Future<BundleInfo?> probeBundle(String path) async {
+    try {
+      final archive = ZipDecoder().decodeBytes(await File(path).readAsBytes());
+      final names = archive.files
+          .where((e) => e.isFile)
+          .map((e) => e.name)
+          .toList();
+      if (names.any(
+        (e) =>
+            e == 'Manifest.json' ||
+            e == 'Info.json' ||
+            e == 'pack_info.json' ||
+            e == 'pack.json',
+      )) {
+        return null;
+      }
+      final members = <String>[];
+      for (final name in names) {
+        final normalized = name.replaceAll('\\', '/');
+        if (normalized.startsWith('__MACOSX/')) continue;
+        final lower = normalized.toLowerCase();
+        if (lower.endsWith('.tefpkg') || lower.endsWith('.zip')) {
+          members.add(normalized);
+        }
+      }
+      if (members.isEmpty) return null;
+      return BundleInfo(path: path, members: members);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Installs a file, expanding bundle archives recursively.
+  /// Bundle progress is reported as phase `bundle` with detail `i/n|name`.
+  Future<List<InstallResult>> installArchive(
+    String path, {
+    InstallProgressCallback? onProgress,
+    int depth = 0,
+  }) async {
+    if (depth > 3) {
+      return const [
+        InstallResult(success: false, error: 'Bundle nesting too deep'),
+      ];
+    }
+    final bundle = await probeBundle(path);
+    if (bundle == null) {
+      return [await installFile(path, onProgress: onProgress)];
+    }
+
+    final Archive archive;
+    try {
+      archive = ZipDecoder().decodeBytes(await File(path).readAsBytes());
+    } catch (e) {
+      return [InstallResult(success: false, error: 'Invalid ZIP: $e')];
+    }
+
+    final tempDir = await Directory.systemTemp.createTemp('tef_bundle_');
+    final results = <InstallResult>[];
+    try {
+      for (var i = 0; i < bundle.members.length; i++) {
+        final memberName = bundle.members[i];
+        ArchiveFile? entry;
+        for (final file in archive.files) {
+          if (file.isFile && file.name == memberName) {
+            entry = file;
+            break;
+          }
+        }
+        final base = memberName.split('/').last;
+        onProgress?.call(
+          'bundle',
+          detail: '${i + 1}/${bundle.members.length}|$base',
+        );
+        if (entry == null) {
+          results.add(
+            InstallResult(
+              success: false,
+              error: 'Missing bundle member: $memberName',
+            ),
+          );
+          continue;
+        }
+        final temp = File('${tempDir.path}/${i}_$base');
+        await temp.writeAsBytes(entry.content, flush: true);
+        results.addAll(
+          await installArchive(
+            temp.path,
+            onProgress: onProgress,
+            depth: depth + 1,
+          ),
+        );
+        try {
+          await temp.delete();
+        } catch (_) {}
+      }
+    } finally {
+      try {
+        await tempDir.delete(recursive: true);
+      } catch (_) {}
+    }
+    return results;
   }
 
   Future<InstallResult> _installAddon(

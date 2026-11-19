@@ -11,6 +11,7 @@ import '../core/native_bridge.dart';
 import '../data/bundled_installer.dart';
 import '../data/component_store.dart';
 import '../data/instance_store.dart';
+import '../data/mod_groups_store.dart';
 import '../data/mod_repository.dart';
 import '../data/mod_settings_store.dart';
 import '../data/update_service.dart';
@@ -34,6 +35,8 @@ class AppController extends ChangeNotifier {
   late Directory _dataDir;
   late InstanceStore _instanceStore;
   InstanceState? _instanceState;
+  ModGroupsState _modGroups = const ModGroupsState();
+  ModGroupsStore? _modGroupsStore;
   late Directory _cacheDir;
   late ConfigStore _configStore;
   List<GameItem> _games = const [];
@@ -84,6 +87,7 @@ class AppController extends ChangeNotifier {
   int get sdk => _sdk;
   ComponentSnapshot get components => _components;
   ComponentStore get componentStore => _componentStore!;
+  ModGroupsState get modGroups => _modGroups;
   ResourcePackSnapshot get resources => _resources;
   ResourcePackStore get resourceStore => _resourceStore!;
   List<ModStoreEntry> get storeEntries => _storeEntries;
@@ -105,6 +109,8 @@ class AppController extends ChangeNotifier {
       _instanceStore = InstanceStore(_rootDir);
       _instanceState = await _instanceStore.load();
       _dataDir = _instanceStore.dirFor(_instanceState!.activeId);
+      _modGroupsStore = ModGroupsStore(_dataDir);
+      _modGroups = await _modGroupsStore!.load();
 
       final info = await _native.deviceInfo();
       _arch = info['arch']?.toString() ?? '';
@@ -299,6 +305,71 @@ class AppController extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<ModGroup> createModGroup(String name) async {
+    final trimmed = name.trim();
+    final group = ModGroup(
+      id: 'grp_${DateTime.now().millisecondsSinceEpoch}',
+      name: trimmed.isEmpty ? tr('manager.group.ungrouped') : trimmed,
+      createdAt: DateTime.now().millisecondsSinceEpoch,
+    );
+    _modGroups = _modGroups.copyWith(groups: [..._modGroups.groups, group]);
+    await _modGroupsStore?.save(_modGroups);
+    notifyListeners();
+    return group;
+  }
+
+  Future<void> renameModGroup(String id, String name) async {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) return;
+    final groups = [
+      for (final group in _modGroups.groups)
+        if (group.id == id)
+          ModGroup(id: group.id, name: trimmed, createdAt: group.createdAt)
+        else
+          group,
+    ];
+    _modGroups = _modGroups.copyWith(groups: groups);
+    await _modGroupsStore?.save(_modGroups);
+    notifyListeners();
+  }
+
+  Future<void> deleteModGroup(String id) async {
+    final groups = _modGroups.groups.where((g) => g.id != id).toList();
+    final assignments = Map<String, String>.of(_modGroups.assignments)
+      ..removeWhere((_, value) => value == id);
+    _modGroups = ModGroupsState(groups: groups, assignments: assignments);
+    await _modGroupsStore?.save(_modGroups);
+    notifyListeners();
+  }
+
+  Future<void> assignModToGroup(
+    String loaderId,
+    String pkgId,
+    String? groupId,
+  ) async {
+    final key = ModGroupsState.keyOf(loaderId, pkgId);
+    final assignments = Map<String, String>.of(_modGroups.assignments);
+    if (groupId == null || groupId.isEmpty) {
+      assignments.remove(key);
+    } else {
+      assignments[key] = groupId;
+    }
+    _modGroups = _modGroups.copyWith(assignments: assignments);
+    await _modGroupsStore?.save(_modGroups);
+    notifyListeners();
+  }
+
+  Future<List<BundleInfo>> inspectBundles(List<String> paths) async {
+    final store = _componentStore;
+    if (store == null) return const [];
+    final bundles = <BundleInfo>[];
+    for (final path in paths) {
+      final bundle = await store.probeBundle(path);
+      if (bundle != null) bundles.add(bundle);
+    }
+    return bundles;
+  }
+
   Future<List<InstallResult>> installPackages(
     List<String> paths, {
     InstallProgressCallback? onProgress,
@@ -307,8 +378,7 @@ class AppController extends ChangeNotifier {
     final store = _componentStore;
     if (store == null) return results;
     for (final path in paths) {
-      final result = await store.installFile(path, onProgress: onProgress);
-      results.add(result);
+      results.addAll(await store.installArchive(path, onProgress: onProgress));
     }
     await _loadComponents();
     notifyListeners();
@@ -336,6 +406,15 @@ class AppController extends ChangeNotifier {
     final store = _componentStore;
     if (store == null) return;
     await store.delete(kind, pkgId, loaderId: loaderId);
+    if (kind == AddonKind.mod && loaderId != null) {
+      final key = ModGroupsState.keyOf(loaderId, pkgId);
+      if (_modGroups.assignments.containsKey(key)) {
+        final assignments = Map<String, String>.of(_modGroups.assignments)
+          ..remove(key);
+        _modGroups = _modGroups.copyWith(assignments: assignments);
+        await _modGroupsStore?.save(_modGroups);
+      }
+    }
     await _loadComponents();
     notifyListeners();
   }
@@ -575,6 +654,8 @@ class AppController extends ChangeNotifier {
       kernelVersion: _config.kernelVersion,
     );
     _resourceStore = ResourcePackStore(_dataDir);
+    _modGroupsStore = ModGroupsStore(_dataDir);
+    _modGroups = await _modGroupsStore!.load();
     _storeEntries = const [];
     _storeError = null;
     _storeLoaded = false;

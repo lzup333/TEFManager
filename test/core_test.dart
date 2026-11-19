@@ -11,6 +11,7 @@ import 'package:tefmanager/data/resource_pack_store.dart';
 import 'package:tefmanager/data/mod_settings_store.dart';
 import 'package:tefmanager/data/bundled_installer.dart';
 import 'package:tefmanager/data/instance_store.dart';
+import 'package:tefmanager/data/mod_groups_store.dart';
 import 'package:archive/archive.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -94,6 +95,7 @@ void main() {
   _storeTests();
   _kernelTests();
   _instanceTests();
+  _bundleTests();
 }
 
 // ---------------------------------------------------------------------------
@@ -409,5 +411,58 @@ void _instanceTests() {
 
     await root.delete(recursive: true);
     await root2.delete(recursive: true);
+  });
+}
+
+void _bundleTests() {
+  test('bundle archive is detected and installed one by one', () async {
+    Uint8List moduleZip(String pkgId, String name) {
+      final archive = Archive()
+        ..add(
+          ArchiveFile.string(
+            'Manifest.json',
+            '{"type":"module","file":"payload.bin"}',
+          ),
+        )
+        ..add(
+          ArchiveFile.string(
+            'Info.json',
+            '{"pkgId":"$pkgId","name":"$name","version":"1.0","versionCode":1}',
+          ),
+        )
+        ..add(ArchiveFile.string('payload.bin', pkgId));
+      return ZipEncoder().encodeBytes(archive);
+    }
+
+    final bundle = Archive()
+      ..add(ArchiveFile.bytes('first.tefpkg', moduleZip('bundle.one', 'One')))
+      ..add(ArchiveFile.bytes('second.tefpkg', moduleZip('bundle.two', 'Two')))
+      ..add(ArchiveFile.string('readme.txt', 'hello'));
+    final bundleFile = File(
+      '${(await Directory.systemTemp.createTemp('tefbundle')).path}/bundle.zip',
+    );
+    await bundleFile.writeAsBytes(ZipEncoder().encodeBytes(bundle));
+
+    final dataDir = await Directory.systemTemp.createTemp('tefinstbundle');
+    final store = ComponentStore(dataDir);
+    final info = await store.probeBundle(bundleFile.path);
+    expect(info, isNotNull);
+    expect(info!.members.length, 2);
+
+    final results = await store.installArchive(bundleFile.path);
+    expect(
+      results.every((r) => r.success),
+      isTrue,
+      reason: results.map((r) => r.error).join(','),
+    );
+
+    final snapshot = await store.load();
+    expect(snapshot.modules.map((e) => e.pkgId).toSet(), {
+      'bundle.one',
+      'bundle.two',
+    });
+
+    await dataDir.delete(recursive: true);
+    await File(bundleFile.path).parent.delete(recursive: true);
   });
 }
