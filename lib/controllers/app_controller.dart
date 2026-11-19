@@ -666,6 +666,16 @@ class AppController extends ChangeNotifier {
     refreshStore(force: true);
   }
 
+  Future<void> reloadInstances() async {
+    final state = await _instanceStore.load();
+    if (state.activeId != instances.activeId) {
+      await _applyInstanceState(state);
+    } else {
+      _instanceState = state;
+      notifyListeners();
+    }
+  }
+
   Future<void> switchInstance(String id) async {
     if (instances.activeId == id) return;
     final state = await _instanceStore.setActive(instances, id);
@@ -683,6 +693,7 @@ class AppController extends ChangeNotifier {
     );
     final created = state.items.last;
     await switchInstance(created.id);
+    await reloadInstances();
     return created;
   }
 
@@ -694,6 +705,7 @@ class AppController extends ChangeNotifier {
     );
     final created = state.items.last;
     await switchInstance(created.id);
+    await reloadInstances();
     return created;
   }
 
@@ -708,6 +720,7 @@ class AppController extends ChangeNotifier {
         await _configStore.save(_config);
       }
       await switchInstance(created.id);
+      await reloadInstances();
       return created;
     } catch (_) {
       return null;
@@ -723,6 +736,7 @@ class AppController extends ChangeNotifier {
       _instanceState = state;
       notifyListeners();
     }
+    await reloadInstances();
   }
 
   /// Writes a shareable ZIP into the cache and returns its path.

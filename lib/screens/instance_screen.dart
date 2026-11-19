@@ -24,6 +24,11 @@ class _InstanceScreenState extends State<InstanceScreen> {
         title: Text(tr('instance.title')),
         actions: [
           IconButton(
+            tooltip: tr('refresh'),
+            onPressed: _busy ? null : () => _refresh(context),
+            icon: const Icon(Icons.refresh_rounded),
+          ),
+          IconButton(
             tooltip: tr('instance.import'),
             onPressed: _busy ? null : () => _import(context),
             icon: const Icon(Icons.file_download_outlined),
@@ -46,33 +51,43 @@ class _InstanceScreenState extends State<InstanceScreen> {
           const SizedBox(width: 4),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(4, 8, 4, 12),
-            child: Text(
-              tr('settings.general.instanceDesc'),
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+      body: RefreshIndicator(
+        onRefresh: () => _refresh(context),
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(4, 8, 4, 12),
+              child: Text(
+                tr('settings.general.instanceDesc'),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
             ),
-          ),
-          for (final instance in state.items)
-            _InstanceCard(
-              instance: instance,
-              active: instance.id == state.activeId,
-              busy: _busy,
-              onSwitch: () => _switch(instance),
-              onClone: () => _clone(context, instance),
-              onExport: () => _export(context, instance),
-              onDelete: instance.isDefault
-                  ? null
-                  : () => _delete(context, instance),
-            ),
-        ],
+            for (final instance in state.items)
+              _InstanceCard(
+                instance: instance,
+                active: instance.id == state.activeId,
+                busy: _busy,
+                onSwitch: () => _switch(instance),
+                onClone: () => _clone(context, instance),
+                onExport: () => _export(context, instance),
+                onDelete: instance.isDefault
+                    ? null
+                    : () => _delete(context, instance),
+              ),
+          ],
+        ),
       ),
     );
+  }
+
+  Future<void> _refresh(BuildContext context) async {
+    final app = AppScope.read(context);
+    await app.reloadInstances();
+    if (mounted) setState(() {});
   }
 
   Future<void> _switch(AppInstance instance) async {
@@ -91,6 +106,7 @@ class _InstanceScreenState extends State<InstanceScreen> {
     final app = AppScope.read(context);
     setState(() => _busy = true);
     await app.createInstance(name, cloneCurrent: clone);
+    await app.reloadInstances();
     if (!mounted) return;
     setState(() => _busy = false);
     ScaffoldMessenger.of(
@@ -102,6 +118,7 @@ class _InstanceScreenState extends State<InstanceScreen> {
     final app = AppScope.read(context);
     setState(() => _busy = true);
     await app.cloneInstance(instance);
+    await app.reloadInstances();
     if (!mounted) return;
     setState(() => _busy = false);
     ScaffoldMessenger.of(
@@ -146,6 +163,7 @@ class _InstanceScreenState extends State<InstanceScreen> {
     if (!mounted || paths.isEmpty) return;
     setState(() => _busy = true);
     final created = await app.importInstance(paths.first);
+    await app.reloadInstances();
     if (!mounted) return;
     setState(() => _busy = false);
     ScaffoldMessenger.of(context).showSnackBar(
@@ -254,6 +272,7 @@ class _InstanceScreenState extends State<InstanceScreen> {
     final app = AppScope.read(context);
     setState(() => _busy = true);
     await app.deleteInstance(instance);
+    await app.reloadInstances();
     if (!mounted) return;
     setState(() => _busy = false);
     ScaffoldMessenger.of(

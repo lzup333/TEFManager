@@ -362,10 +362,23 @@ void _instanceTests() {
     await kernelFile.parent.create(recursive: true);
     await kernelFile.writeAsString('{"version":"1.4.0"}');
 
+    final groupsStore = ModGroupsStore(root);
+    await groupsStore.save(
+      const ModGroupsState(
+        groups: [ModGroup(id: 'g1', name: 'Favorites')],
+        assignments: {'loader.x|mod.y': 'g1'},
+      ),
+    );
+    expect((await groupsStore.load()).groups.single.name, 'Favorites');
+
     state = await store.create(state, name: '副本', cloneFromId: 'default');
     final clone = state.items.last;
     expect(
       await File('${store.dirFor(clone.id).path}/module/pkg/a.tefpkg').exists(),
+      isTrue,
+    );
+    expect(
+      await File('${store.dirFor(clone.id).path}/mod_groups.json').exists(),
       isTrue,
     );
 
@@ -380,6 +393,7 @@ void _instanceTests() {
     expect(names, contains('tefloader.dex'));
     expect(names, contains('tefkernel/info.json'));
     expect(names, contains('data/module/pkg/a.tefpkg'));
+    expect(names, contains('data/mod_groups.json'));
     expect(names.any((n) => n.contains('texturepackextension')), isFalse);
 
     final withPacks = await store.exportZip(
