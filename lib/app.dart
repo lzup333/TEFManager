@@ -60,6 +60,9 @@ class TefManagerApp extends StatelessWidget {
             theme: AppTheme.light(seed, transparentScaffold: hasBackground),
             darkTheme: AppTheme.dark(seed, transparentScaffold: hasBackground),
             builder: (context, child) {
+              if (controller.uiHidden) {
+                return const _EasterHiddenOverlay();
+              }
               final scale = config.fontSizeScale.clamp(0.5, 2.0);
               final media = MediaQuery.of(context);
               final content = MediaQuery(
@@ -114,6 +117,43 @@ class _BootScreen extends StatelessWidget {
             const SizedBox(height: 16),
             Text(tr('loading') == 'loading' ? '正在启动…' : tr('loading')),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EasterHiddenOverlay extends StatefulWidget {
+  const _EasterHiddenOverlay();
+
+  @override
+  State<_EasterHiddenOverlay> createState() => _EasterHiddenOverlayState();
+}
+
+class _EasterHiddenOverlayState extends State<_EasterHiddenOverlay> {
+  int _taps = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          _taps++;
+          if (_taps >= 3) {
+            AppScope.read(context).setUiHidden(false);
+          } else if (mounted) {
+            setState(() {});
+          }
+        },
+        child: Center(
+          child: _taps > 0
+              ? Text(
+                  '${3 - _taps}',
+                  style: const TextStyle(color: Colors.white12, fontSize: 72),
+                )
+              : const SizedBox.shrink(),
         ),
       ),
     );

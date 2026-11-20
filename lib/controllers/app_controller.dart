@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -7,6 +8,7 @@ import '../models/models.dart';
 import '../core/app_info.dart';
 import '../core/config.dart';
 import '../core/i18n.dart';
+import '../core/easter_egg.dart';
 import '../core/native_bridge.dart';
 import '../data/bundled_installer.dart';
 import '../data/component_store.dart';
@@ -37,6 +39,8 @@ class AppController extends ChangeNotifier {
   InstanceState? _instanceState;
   ModGroupsState _modGroups = const ModGroupsState();
   ModGroupsStore? _modGroupsStore;
+  bool _uiHidden = false;
+  Timer? _jumpTimer;
   late Directory _cacheDir;
   late ConfigStore _configStore;
   List<GameItem> _games = const [];
@@ -88,6 +92,7 @@ class AppController extends ChangeNotifier {
   ComponentSnapshot get components => _components;
   ComponentStore get componentStore => _componentStore!;
   ModGroupsState get modGroups => _modGroups;
+  bool get uiHidden => _uiHidden;
   ResourcePackSnapshot get resources => _resources;
   ResourcePackStore get resourceStore => _resourceStore!;
   List<ModStoreEntry> get storeEntries => _storeEntries;
@@ -548,6 +553,25 @@ class AppController extends ChangeNotifier {
   void selectGame(GameItem? game) {
     _selectedGame = game;
     notifyListeners();
+  }
+
+  void setUiHidden(bool value) {
+    if (_uiHidden == value) return;
+    _uiHidden = value;
+    notifyListeners();
+  }
+
+  void cancelEasterJump() {
+    _jumpTimer?.cancel();
+    _jumpTimer = null;
+  }
+
+  void scheduleBilibiliJump() {
+    cancelEasterJump();
+    _jumpTimer = Timer(const Duration(seconds: 20), () {
+      _native.openUrl(kEasterBilibiliUrl);
+      _jumpTimer = null;
+    });
   }
 
   Future<bool> hasRoot() => _native.hasRoot();

@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 
 import '../app.dart';
 import '../core/app_info.dart';
+import '../core/easter_egg.dart';
+import '../core/native_bridge.dart';
 import '../core/config.dart';
 import '../core/i18n.dart';
 import '../widgets/common.dart';
@@ -246,12 +248,7 @@ class SettingsScreen extends StatelessWidget {
               ListTile(
                 leading: const Icon(Icons.info_outline_rounded),
                 title: const Text('TEFManager'),
-                subtitle: Text(
-                  tr('app.version', {
-                    'version': AppInfo.versionName,
-                    'versionCode': AppInfo.versionCode,
-                  }),
-                ),
+                subtitle: const _VersionText(),
                 trailing: const MetaChip(
                   label: 'Android',
                   tone: ChipTone.success,
@@ -661,6 +658,124 @@ class _NumberTile extends StatelessWidget {
             icon: const Icon(Icons.add_circle_outline_rounded),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _VersionText extends StatefulWidget {
+  const _VersionText();
+
+  @override
+  State<_VersionText> createState() => _VersionTextState();
+}
+
+class _VersionTextState extends State<_VersionText> {
+  int _taps = 0;
+  DateTime? _last;
+
+  void _onTap() {
+    final now = DateTime.now();
+    if (_last != null && now.difference(_last!) > const Duration(seconds: 1)) {
+      _taps = 0;
+    }
+    _last = now;
+    _taps++;
+    if (_taps >= 7) {
+      _taps = 0;
+      _last = null;
+      _openSeedDialog();
+    }
+  }
+
+  Future<void> _openSeedDialog() async {
+    final controller = TextEditingController();
+    final seed = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Seed'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(hintText: '输入种子'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(tr('cancel')),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, controller.text),
+            child: Text(tr('confirm')),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (seed == null || !mounted) return;
+
+    final app = AppScope.read(context);
+    switch (resolveEasterEffect(seed)) {
+      case EasterEffect.hideUi:
+        app.setUiHidden(true);
+      case EasterEffect.openOfficial:
+        NativeBridge.instance.openUrl(kEasterOfficialUrl);
+      case EasterEffect.stinkNumber:
+        await _showText('恶臭的数字');
+      case EasterEffect.secretText:
+        app.scheduleBilibiliJump();
+        await _showText(
+          kEasterSecretText.trimRight(),
+          title: '彩蛋',
+          footer: '20 秒后自动跳转',
+        );
+      case EasterEffect.none:
+        break;
+    }
+  }
+
+  Future<void> _showText(String text, {String? title, String? footer}) {
+    return showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title ?? '彩蛋'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(text, style: const TextStyle(height: 1.5)),
+              if (footer != null) ...[
+                const SizedBox(height: 12),
+                Text(
+                  footer,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(tr('close')),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: _onTap,
+      child: Text(
+        tr('app.version', {
+          'version': AppInfo.versionName,
+          'versionCode': AppInfo.versionCode,
+        }),
       ),
     );
   }

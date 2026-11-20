@@ -11,6 +11,8 @@ import 'package:tefmanager/data/resource_pack_store.dart';
 import 'package:tefmanager/data/mod_settings_store.dart';
 import 'package:tefmanager/data/bundled_installer.dart';
 import 'package:tefmanager/data/instance_store.dart';
+import 'package:tefmanager/core/easter_egg.dart';
+import 'package:tefmanager/core/secrets.dart';
 import 'package:tefmanager/data/mod_groups_store.dart';
 import 'package:archive/archive.dart';
 import 'package:http/http.dart' as http;
@@ -96,6 +98,7 @@ void main() {
   _kernelTests();
   _instanceTests();
   _bundleTests();
+  _easterEggTests();
 }
 
 // ---------------------------------------------------------------------------
@@ -478,5 +481,23 @@ void _bundleTests() {
 
     await dataDir.delete(recursive: true);
     await File(bundleFile.path).parent.delete(recursive: true);
+  });
+}
+
+void _easterEggTests() {
+  test('seed normalization keeps only lowercase alphanumerics', () {
+    expect(normalizeSeed('AbC-123  X'), 'abc123x');
+    expect(normalizeSeed(''), '');
+  });
+
+  test('toSecret is deterministic and 32-char base64', () {
+    final a = toSecret('tefmanager-easter-egg-probe');
+    final b = toSecret('tefmanager-easter-egg-probe');
+    expect(a, b);
+    expect(a.length, 32);
+  });
+
+  test('empty seed hides the UI', () {
+    expect(resolveEasterEffect(''), EasterEffect.hideUi);
   });
 }
