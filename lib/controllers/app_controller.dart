@@ -11,8 +11,8 @@ import '../core/i18n.dart';
 import '../core/easter_egg.dart';
 import '../core/native_bridge.dart';
 import '../data/bundled_installer.dart';
+import '../data/backup_store.dart';
 import '../data/component_store.dart';
-import '../data/instance_store.dart';
 import '../data/mod_groups_store.dart';
 import '../data/mod_repository.dart';
 import '../data/mod_settings_store.dart';
@@ -35,8 +35,6 @@ class AppController extends ChangeNotifier {
   late AppConfig _config;
   late Directory _rootDir;
   late Directory _dataDir;
-  late InstanceStore _instanceStore;
-  InstanceState? _instanceState;
   ModGroupsState _modGroups = const ModGroupsState();
   ModGroupsStore? _modGroupsStore;
   bool _uiHidden = false;
@@ -66,15 +64,6 @@ class AppController extends ChangeNotifier {
   Directory get rootDir => _rootDir;
   Directory get dataDir => _dataDir;
   Directory get cacheDir => _cacheDir;
-  InstanceState get instances =>
-      _instanceState ??
-      const InstanceState(
-        activeId: InstanceStore.defaultId,
-        items: [
-          AppInstance(id: InstanceStore.defaultId, name: '默认实例', builtIn: true),
-        ],
-      );
-  AppInstance get activeInstance => instances.active;
   String get backgroundImagePath {
     final value = _config.backgroundImage;
     if (value.isEmpty) return '';
@@ -111,9 +100,7 @@ class AppController extends ChangeNotifier {
       _configStore = ConfigStore(File('${_rootDir.path}/app_config.json'));
       _config = await _configStore.load();
 
-      _instanceStore = InstanceStore(_rootDir);
-      _instanceState = await _instanceStore.load();
-      _dataDir = _instanceStore.dirFor(_instanceState!.activeId);
+      _dataDir = _rootDir;
       _modGroupsStore = ModGroupsStore(_dataDir);
       _modGroups = await _modGroupsStore!.load();
 
@@ -675,18 +662,34 @@ class AppController extends ChangeNotifier {
   }
 
   // -------------------------------------------------------------------------
-  // Instances
+  // Data backup / restore
   // -------------------------------------------------------------------------
 
-  Future<void> _applyInstanceState(InstanceState state) async {
-    _instanceState = state;
-    _dataDir = _instanceStore.dirFor(state.activeId);
-    _componentStore = ComponentStore(
-      _dataDir,
-      kernelVersion: _config.kernelVersion,
-    );
-    _resourceStore = ResourcePackStore(_dataDir);
-    _modGroupsStore = ModGroupsStore(_dataDir);
+  /// Exports the working data (mods/modules/kernel/logs) into the cache.
+  Future<String?> backupData() async {
+    try {
+      final bytes = await BackupStore(_rootDir).export();
+      final stamp = DateTime.now().millisecondsSinceEpoch;
+      final file = File('${_cacheDir.path}/tefmanager-backup-$stamp.zip');
+      await file.writeAsBytes(bytes, flush: true);
+      return file.path;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Restores data from a backup ZIP, then reloads every store.
+  Future<void> restoreData(String path) async {
+    final bytes = await File(path).readAsBytes();
+    await BackupStore(_rootDir).importZip(bytes);
+    final kernelVersion = await _readKernelVersion();
+    if (kernelVersion != _config.kernelVersion) {
+      _config.kernelVersion = kernelVersion;
+      await _configStore.save(_config);
+    }
+    _componentStore = ComponentStore(_rootDir, kernelVersion: kernelVersion);
+    _resourceStore = ResourcePackStore(_rootDir);
+    _modGroupsStore = ModGroupsStore(_rootDir);
     _modGroups = await _modGroupsStore!.load();
     _storeEntries = const [];
     _storeError = null;
@@ -694,107 +697,6 @@ class AppController extends ChangeNotifier {
     await _loadComponents();
     await _loadResources();
     notifyListeners();
-    // Repository contents are instance-specific; refresh in the background.
-    refreshStore(force: true);
-  }
-
-  Future<void> reloadInstances() async {
-    final state = await _instanceStore.load();
-    if (state.activeId != instances.activeId) {
-      await _applyInstanceState(state);
-    } else {
-      _instanceState = state;
-      notifyListeners();
-    }
-  }
-
-  Future<void> switchInstance(String id) async {
-    if (instances.activeId == id) return;
-    final state = await _instanceStore.setActive(instances, id);
-    await _applyInstanceState(state);
-  }
-
-  Future<AppInstance> createInstance(
-    String name, {
-    bool cloneCurrent = false,
-  }) async {
-    final state = await _instanceStore.create(
-      instances,
-      name: name,
-      cloneFromId: cloneCurrent ? instances.activeId : null,
-    );
-    final created = state.items.last;
-    await switchInstance(created.id);
-    await reloadInstances();
-    return created;
-  }
-
-  Future<AppInstance> cloneInstance(AppInstance source) async {
-    final state = await _instanceStore.create(
-      instances,
-      name: '${source.name} 副本',
-      cloneFromId: source.id,
-    );
-    final created = state.items.last;
-    await switchInstance(created.id);
-    await reloadInstances();
-    return created;
-  }
-
-  Future<AppInstance?> importInstance(String path) async {
-    try {
-      final bytes = await File(path).readAsBytes();
-      final (state, id) = await _instanceStore.importZip(instances, bytes);
-      final created = state.items.firstWhere((e) => e.id == id);
-      final kernelVersion = await _readKernelVersion();
-      if (kernelVersion != _config.kernelVersion) {
-        _config.kernelVersion = kernelVersion;
-        await _configStore.save(_config);
-      }
-      await switchInstance(created.id);
-      await reloadInstances();
-      return created;
-    } catch (_) {
-      return null;
-    }
-  }
-
-  Future<void> deleteInstance(AppInstance instance) async {
-    if (instance.isDefault) return;
-    final state = await _instanceStore.delete(instances, instance.id);
-    if (state.activeId != instances.activeId) {
-      await _applyInstanceState(state);
-    } else {
-      _instanceState = state;
-      notifyListeners();
-    }
-    await reloadInstances();
-  }
-
-  /// Writes a shareable ZIP into the cache and returns its path.
-  ///
-  /// Always contains TEFLoader, TEFKernel and mods; resource packs are opt-in.
-  Future<String?> exportInstance(
-    AppInstance instance, {
-    bool includeResourcePacks = false,
-  }) async {
-    try {
-      final loader = await _native.readAndroidAsset('tefloader.dex');
-      final bytes = await _instanceStore.exportZip(
-        instance,
-        includeResourcePacks: includeResourcePacks,
-        loaderBytes: loader,
-      );
-      final safeName = instance.name.replaceAll(
-        RegExp(r'[^\w\u4e00-\u9fa5.-]'),
-        '_',
-      );
-      final file = File('${_cacheDir.path}/$safeName.tefinstance.zip');
-      await file.writeAsBytes(bytes, flush: true);
-      return file.path;
-    } catch (_) {
-      return null;
-    }
   }
 
   Future<void> updateConfig(void Function(AppConfig config) change) async {

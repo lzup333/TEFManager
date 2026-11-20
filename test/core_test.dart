@@ -10,7 +10,7 @@ import 'package:tefmanager/data/component_store.dart';
 import 'package:tefmanager/data/resource_pack_store.dart';
 import 'package:tefmanager/data/mod_settings_store.dart';
 import 'package:tefmanager/data/bundled_installer.dart';
-import 'package:tefmanager/data/instance_store.dart';
+import 'package:tefmanager/data/backup_store.dart';
 import 'package:tefmanager/core/easter_egg.dart';
 import 'package:tefmanager/core/secrets.dart';
 import 'package:tefmanager/data/mod_groups_store.dart';
@@ -96,7 +96,7 @@ void main() {
   _settingsTests();
   _storeTests();
   _kernelTests();
-  _instanceTests();
+  _backupTests();
   _bundleTests();
   _easterEggTests();
 }
@@ -342,92 +342,40 @@ void _kernelTests() {
   });
 }
 
-void _instanceTests() {
-  test('instances: default, create, clone and export layout', () async {
-    final root = await Directory.systemTemp.createTemp('tefinst');
-    final store = InstanceStore(root);
+void _backupTests() {
+  test('backup export/import round-trips working data', () async {
+    final root = await Directory.systemTemp.createTemp('tefbackup');
+    final module = File('${root.path}/module/pkg/a.tefpkg');
+    await module.parent.create(recursive: true);
+    await module.writeAsString('payload');
+    final kernel = File('${root.path}/tefkernel/info.json');
+    await kernel.parent.create(recursive: true);
+    await kernel.writeAsString('{"version":"1.4.0"}');
+    final groups = File('${root.path}/mod_groups.json');
+    await groups.writeAsString('{"groups":[],"assignments":{}}');
 
-    var state = await store.load();
-    expect(state.activeId, 'default');
-    expect(state.items.single.isDefault, isTrue);
-
-    // Put something into the default instance.
-    final moduleFile = File('${root.path}/module/pkg/a.tefpkg');
-    await moduleFile.parent.create(recursive: true);
-    await moduleFile.writeAsString('payload');
-    final packFile = File(
-      '${root.path}/module/private/eternal.future.texturepackextension/'
-      'texture_packs/tex_a.zip',
-    );
-    await packFile.parent.create(recursive: true);
-    await packFile.writeAsString('pack');
-    final kernelFile = File('${root.path}/tefkernel/info.json');
-    await kernelFile.parent.create(recursive: true);
-    await kernelFile.writeAsString('{"version":"1.4.0"}');
-
-    final groupsStore = ModGroupsStore(root);
-    await groupsStore.save(
-      const ModGroupsState(
-        groups: [ModGroup(id: 'g1', name: 'Favorites')],
-        assignments: {'loader.x|mod.y': 'g1'},
-      ),
-    );
-    expect((await groupsStore.load()).groups.single.name, 'Favorites');
-
-    state = await store.create(state, name: '副本', cloneFromId: 'default');
-    final clone = state.items.last;
-    expect(
-      await File('${store.dirFor(clone.id).path}/module/pkg/a.tefpkg').exists(),
-      isTrue,
-    );
-    expect(
-      await File('${store.dirFor(clone.id).path}/mod_groups.json').exists(),
-      isTrue,
-    );
-
-    final exported = await store.exportZip(
-      clone,
-      includeResourcePacks: false,
-      loaderBytes: Uint8List.fromList([1, 2, 3]),
-    );
-    final archive = ZipDecoder().decodeBytes(exported);
-    final names = archive.files.map((e) => e.name).toSet();
-    expect(names, contains('info.json'));
-    expect(names, contains('tefloader.dex'));
-    expect(names, contains('tefkernel/info.json'));
-    expect(names, contains('data/module/pkg/a.tefpkg'));
-    expect(names, contains('data/mod_groups.json'));
-    expect(names.any((n) => n.contains('texturepackextension')), isFalse);
-
-    final withPacks = await store.exportZip(
-      clone,
-      includeResourcePacks: true,
-      loaderBytes: Uint8List.fromList([1, 2, 3]),
-    );
-    final packNames = ZipDecoder()
-        .decodeBytes(withPacks)
+    final store = BackupStore(root);
+    final bytes = await store.export();
+    final names = ZipDecoder()
+        .decodeBytes(bytes)
         .files
-        .map((e) => e.name);
-    expect(packNames.any((n) => n.contains('texturepackextension')), isTrue);
+        .map((e) => e.name)
+        .toSet();
+    expect(names, contains('info.json'));
+    expect(names, contains('data/module/pkg/a.tefpkg'));
+    expect(names, contains('data/tefkernel/info.json'));
+    expect(names, contains('data/mod_groups.json'));
 
-    // Import into a fresh manager root.
-    final root2 = await Directory.systemTemp.createTemp('tefinst2');
-    final store2 = InstanceStore(root2);
-    var state2 = await store2.load();
-    final (next, id) = await store2.importZip(state2, exported);
-    state2 = next;
-    expect(state2.items.any((e) => e.id == id), isTrue);
-    final imported = state2.items.firstWhere((e) => e.id == id);
-    expect(imported.name, '副本');
-    expect(await File('${root2.path}/tefloader.dex').exists(), isTrue);
-    expect(await File('${root2.path}/tefkernel/info.json').exists(), isTrue);
-    expect(
-      await File('${store2.dirFor(id).path}/module/pkg/a.tefpkg').exists(),
-      isTrue,
-    );
+    // wipe, then restore
+    await Directory('${root.path}/module').delete(recursive: true);
+    await Directory('${root.path}/tefkernel').delete(recursive: true);
+    await groups.delete();
+    await store.importZip(bytes);
+    expect(await File('${root.path}/module/pkg/a.tefpkg').exists(), isTrue);
+    expect(await File('${root.path}/tefkernel/info.json').exists(), isTrue);
+    expect(await File('${root.path}/mod_groups.json').exists(), isTrue);
 
     await root.delete(recursive: true);
-    await root2.delete(recursive: true);
   });
 }
 

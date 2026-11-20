@@ -9,7 +9,6 @@ import '../core/native_bridge.dart';
 import '../core/config.dart';
 import '../core/i18n.dart';
 import '../widgets/common.dart';
-import 'instance_screen.dart';
 import 'open_source_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -56,21 +55,6 @@ class SettingsScreen extends StatelessWidget {
                         ),
                       ),
                   ],
-                ),
-              ),
-              const Divider(indent: 16, endIndent: 16),
-              ListTile(
-                leading: const Icon(Icons.layers_outlined),
-                title: Text(tr('settings.general.instance')),
-                subtitle: Text(
-                  '${app.activeInstance.isDefault ? tr('instance.default') : app.activeInstance.name}'
-                  ' · ${app.instances.items.length}',
-                ),
-                trailing: const Icon(Icons.chevron_right_rounded),
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const InstanceScreen(),
-                  ),
                 ),
               ),
             ],
@@ -322,6 +306,24 @@ class SettingsScreen extends StatelessWidget {
                         label: Text(tr('settings.about.reinstall')),
                       ),
                     ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () => _backupData(context),
+                        icon: const Icon(Icons.backup_outlined),
+                        label: Text(tr('settings.about.backup')),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () => _restoreData(context),
+                        icon: const Icon(Icons.restore_outlined),
+                        label: Text(tr('settings.about.restore')),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -338,6 +340,95 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Future<void> _backupData(BuildContext context) async {
+    final app = AppScope.read(context);
+    final path = await app.backupData();
+    if (!context.mounted) return;
+    if (path == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(tr('settings.about.backupFailed'))),
+      );
+      return;
+    }
+    final saved = await app.exportFile(
+      path,
+      'tefmanager-backup-${DateTime.now().millisecondsSinceEpoch}.zip',
+    );
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          saved
+              ? tr('settings.about.backupSuccess')
+              : tr('settings.about.backupFailed'),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _restoreData(BuildContext context) async {
+    final app = AppScope.read(context);
+    final paths = await app.pickPackageFiles();
+    if (!context.mounted || paths.isEmpty) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(tr('settings.about.restoreTitle')),
+        content: Text(tr('settings.about.restoreBody')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(tr('cancel')),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(tr('confirm')),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        content: Row(
+          children: [
+            const SizedBox(
+              width: 22,
+              height: 22,
+              child: CircularProgressIndicator(strokeWidth: 2.5),
+            ),
+            const SizedBox(width: 16),
+            Expanded(child: Text(tr('settings.about.restoring'))),
+          ],
+        ),
+      ),
+    );
+    String? error;
+    try {
+      await app.restoreData(paths.first);
+    } catch (e) {
+      error = '$e';
+    }
+    if (!context.mounted) return;
+    Navigator.of(context, rootNavigator: true).pop();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          error == null
+              ? tr('settings.about.restoreSuccess')
+              : '${tr('settings.about.restoreFailed')}: $error',
+        ),
       ),
     );
   }
