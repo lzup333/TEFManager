@@ -628,6 +628,14 @@ class AppController extends ChangeNotifier {
     return true;
   }
 
+  Future<void> setBackgroundDim(double value) async {
+    final clamped = value.clamp(0.0, 0.8);
+    if ((_config.backgroundDim - clamped).abs() < 0.001) return;
+    _config.backgroundDim = clamped;
+    await _configStore.save(_config);
+    notifyListeners();
+  }
+
   Future<void> clearBackgroundImage() async {
     final previous = _config.backgroundImage;
     if (previous.isEmpty) return;

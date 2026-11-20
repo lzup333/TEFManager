@@ -166,6 +166,8 @@ class I18n {
       'manager.group.deleteBody': '删除分组不会删除 Mod，组内 Mod 会回到未分组。',
       'manager.group.empty': '还没有分组，先创建一个吧',
       'manager.group.count': '\${count} 个 Mod',
+      'settings.appearance.backgroundDim': '背景遮罩',
+      'settings.appearance.backgroundDimDesc': '调暗背景以突出内容',
       'settings.appearance.background': '背景图片',
       'settings.appearance.backgroundDesc': '选择一张图片作为界面背景',
       'settings.appearance.chooseBackground': '选择图片',
@@ -341,6 +343,9 @@ class I18n {
           'Deleting a group does not delete mods; they return to Ungrouped.',
       'manager.group.empty': 'No groups yet. Create one first.',
       'manager.group.count': '\${count} mods',
+      'settings.appearance.backgroundDim': 'Background dim',
+      'settings.appearance.backgroundDimDesc':
+          'Darken the background for readability',
       'settings.appearance.background': 'Background image',
       'settings.appearance.backgroundDesc':
           'Pick an image to use as the UI background',
@@ -517,6 +522,8 @@ class I18n {
           'Удаление группы не удаляет моды — они вернутся в «Без группы».',
       'manager.group.empty': 'Групп пока нет',
       'manager.group.count': '\${count} модов',
+      'settings.appearance.backgroundDim': 'Затемнение фона',
+      'settings.appearance.backgroundDimDesc': 'Затемнить фон для читаемости',
       'settings.appearance.background': 'Фоновое изображение',
       'settings.appearance.backgroundDesc':
           'Выберите изображение для фона интерфейса',

@@ -103,6 +103,51 @@ class SettingsScreen extends StatelessWidget {
               ),
               const Divider(indent: 16, endIndent: 16),
               const _BackgroundTile(),
+              if (app.backgroundImagePath.isNotEmpty) ...[
+                const Divider(indent: 16, endIndent: 16),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              tr('settings.appearance.backgroundDim'),
+                              style: Theme.of(context).textTheme.bodyLarge,
+                            ),
+                            Text(
+                              tr('settings.appearance.backgroundDimDesc'),
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      MetaChip(
+                        label: '${(config.backgroundDim * 100).round()}%',
+                        tone: ChipTone.primary,
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Slider(
+                    value: config.backgroundDim.clamp(0.0, 0.8),
+                    min: 0.0,
+                    max: 0.8,
+                    divisions: 40,
+                    label: '${(config.backgroundDim * 100).round()}%',
+                    onChanged: app.setBackgroundDim,
+                  ),
+                ),
+              ],
               const Divider(indent: 16, endIndent: 16),
               _SeedColorTile(color: Color(config.themeSeedColor)),
               const Divider(indent: 16, endIndent: 16),

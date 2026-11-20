@@ -49,6 +49,7 @@ class AppConfig {
     this.modSupportEnabled = true,
     this.redirectSavesEnabled = false,
     this.backgroundImage = '',
+    this.backgroundDim = 0.25,
   });
 
   bool initialized;
@@ -70,6 +71,9 @@ class AppConfig {
 
   /// File name under `<files>/backgrounds/`, or an absolute path.
   String backgroundImage;
+
+  /// 背景遮罩不透明度 0.0 ~ 0.8。
+  double backgroundDim;
 
   Map<String, dynamic> toJson() => {
     'initialized': initialized,
@@ -118,6 +122,7 @@ class AppConfig {
       modSupportEnabled: asBool(json['modSupportEnabled'], true),
       redirectSavesEnabled: asBool(json['redirectSavesEnabled'], false),
       backgroundImage: json['backgroundImage']?.toString() ?? '',
+      backgroundDim: asDouble(json['backgroundDim'], 0.25).clamp(0.0, 0.8),
     );
   }
 }

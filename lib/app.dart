@@ -75,7 +75,11 @@ class TefManagerApp extends StatelessWidget {
                     fit: BoxFit.cover,
                     errorBuilder: (_, _, _) => const SizedBox.expand(),
                   ),
-                  ColoredBox(color: Colors.black.withValues(alpha: 0.45)),
+                  ColoredBox(
+                    color: Colors.black.withValues(
+                      alpha: controller.config.backgroundDim,
+                    ),
+                  ),
                   Positioned.fill(child: content),
                 ],
               );
