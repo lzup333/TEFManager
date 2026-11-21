@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import '../app.dart';
+import '../core/i18n.dart';
 import '../core/native_bridge.dart';
 
 /// Renders the stable, Compose-free PageNode tree returned by a Mod page.
@@ -109,7 +110,7 @@ class _JsonUiScreenState extends State<JsonUiScreen> {
               }
               if (id.isNotEmpty) _event(id, null);
             },
-            child: Text(node.str('label', '按钮')),
+            child: Text(node.str('label', tr('mod.page.defaultButton'))),
           ),
         );
       case 'checkbox':

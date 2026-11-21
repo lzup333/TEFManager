@@ -1215,7 +1215,17 @@ class _ManagerScreenState extends State<ManagerScreen> {
                           loaderId: loaderId,
                           pkgId: item.pkgId,
                         );
-                        if (json == null || !context.mounted) return;
+                        if (json == null) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(tr('mod.page.loadFailed')),
+                              ),
+                            );
+                          }
+                          return;
+                        }
+                        if (!context.mounted) return;
                         Navigator.of(context).pop();
                         Navigator.of(context).push(
                           MaterialPageRoute<void>(
