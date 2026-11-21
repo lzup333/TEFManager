@@ -46,7 +46,7 @@ class NativeBridge {
 
   Stream<void> get modPageClosed => _modPageClosed.stream;
 
-  Future<String?> openModPage({
+  Future<({String? json, String? error})> openModPage({
     required String jarPath,
     required String className,
     required String privatePath,
@@ -59,9 +59,9 @@ class NativeBridge {
         'privatePath': privatePath,
         'dataPath': dataPath,
       });
-      return raw?['json']?.toString();
-    } catch (_) {
-      return null;
+      return (json: raw?['json']?.toString(), error: null);
+    } catch (e) {
+      return (json: null, error: e.toString());
     }
   }
 

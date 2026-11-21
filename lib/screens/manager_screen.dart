@@ -1209,22 +1209,25 @@ class _ManagerScreenState extends State<ManagerScreen> {
                   Expanded(
                     child: FilledButton.icon(
                       onPressed: () async {
-                        final json = await app.openModPage(
+                        final result = await app.openModPage(
                           jarPath: jar,
                           className: item.pageClass,
                           loaderId: loaderId,
                           pkgId: item.pkgId,
                         );
-                        if (json == null) {
+                        if (result.error != null || result.json == null) {
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text(tr('mod.page.loadFailed')),
+                                content: Text(
+                                  '${tr('mod.page.loadFailed')}: ${result.error}',
+                                ),
                               ),
                             );
                           }
                           return;
                         }
+                        final json = result.json!;
                         if (!context.mounted) return;
                         Navigator.of(context).pop();
                         Navigator.of(context).push(

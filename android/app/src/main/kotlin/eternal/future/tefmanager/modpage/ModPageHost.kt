@@ -3,6 +3,7 @@ package eternal.future.tefmanager.modpage
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import dalvik.system.DexClassLoader
 import eternal.future.tefmanager.modpage.api.ModPage
 import eternal.future.tefmanager.modpage.api.ModPageApi
@@ -68,7 +69,8 @@ class ModPageHost(
                 else -> result.notImplemented()
             }
         } catch (e: Throwable) {
-            result.error("modpage", e.message ?: e::class.simpleName, null)
+            Log.e("ModPageHost", "mod page failed: ${call.method}", e)
+            result.error("modpage", e.message ?: e.toString(), null)
         }
     }
 

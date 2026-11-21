@@ -661,7 +661,7 @@ class AppController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<String?> openModPage({
+  Future<({String? json, String? error})> openModPage({
     required String jarPath,
     required String className,
     required String loaderId,

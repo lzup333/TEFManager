@@ -29,3 +29,7 @@
 # 报 "Failed resolution of: Lkotlin/jvm/internal/Intrinsics;"。
 -keep class kotlin.** { *; }
 -keep interface kotlin.** { *; }
+
+# ModPage 稳定 ABI 与宿主实现：外部页面 JAR 按类名引用，Voyager/反射也依赖类名
+-keep class eternal.future.tefmanager.** { *; }
+-keep interface eternal.future.tefmanager.** { *; }
