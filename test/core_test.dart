@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -251,6 +252,95 @@ void _installTests() {
 
     await dir.delete(recursive: true);
   });
+
+  test(
+    'standard Lua mod package installs page jars under private dir',
+    () async {
+      final dir = await Directory.systemTemp.createTemp('tefmodpage');
+      const loaderId = 'lzup333.lualoader';
+      const pkgId = 'dev.lzup.modpagetest';
+
+      // Preinstall the parent loader, as required for mod packages.
+      final loaderStore = LightStore<ModLoaderItem>(
+        directory: Directory('${dir.path}/modloader/db'),
+        encode: encodeModLoader,
+        decode: decodeModLoader,
+        keyOf: (v) => v.pkgId,
+      );
+      await loaderStore.writeAll([
+        const ModLoaderItem(
+          pkgId: loaderId,
+          name: 'LuaLoader',
+          version: '3.1.4',
+          versionCode: 50,
+        ),
+      ]);
+
+      final manifest = {
+        'type': 'Mod',
+        'file': 'luamod.json',
+        'parentLoader': loaderId,
+        'resources': 'Resources',
+        'modloader': {'type': 'null'},
+        'plugins': {'type': 'null'},
+        'tefkernel': {'minVersion': '1.0.0'},
+      };
+      final info = {
+        'pkgId': pkgId,
+        'name': 'ModPageTest',
+        'author': 'lzup',
+        'version': '1.0.0',
+        'versionCode': 1,
+        'features': ['UTILITY'],
+        'sizeCategory': 'TINY',
+        'support': {
+          'android': {'arm64': true},
+        },
+        'pageClass': 'dev.lzup.modpagetest.Page',
+      };
+      final archive = Archive()
+        ..add(ArchiveFile.string('Manifest.json', jsonEncode(manifest)))
+        ..add(ArchiveFile.string('Info.json', jsonEncode(info)))
+        ..add(
+          ArchiveFile.string(
+            'luamod.json',
+            jsonEncode({
+              'main': 'main.lua',
+              'pkg_id': pkgId,
+              'version': '1.0.0',
+              'version_code': 1,
+              'api_version': 1,
+              'multiplayer_safe': true,
+            }),
+          ),
+        )
+        ..add(ArchiveFile.string('Resources/lib/main.lua', 'todo_list = {}'))
+        ..add(ArchiveFile.bytes('Resources/page/android.jar', [1, 2, 3]))
+        ..add(ArchiveFile.bytes('Resources/page/desktop.jar', [4, 5, 6]));
+
+      final store = ComponentStore(dir, kernelVersion: '1.4.1');
+      final result = await store.installBytes(
+        ZipEncoder().encodeBytes(archive),
+      );
+      expect(result.success, isTrue, reason: result.error);
+
+      final private = '${dir.path}/mods/$loaderId/private/$pkgId';
+      expect(await File('$private/page/android.jar').exists(), isTrue);
+      expect(await File('$private/page/desktop.jar').exists(), isTrue);
+      expect(await File('$private/lib/main.lua').exists(), isTrue);
+      expect(
+        await File('${dir.path}/mods/$loaderId/mod/$pkgId').readAsString(),
+        contains('pkg_id'),
+      );
+
+      final snapshot = await store.load();
+      expect(
+        snapshot.mods[loaderId]!.single.pageClass,
+        'dev.lzup.modpagetest.Page',
+      );
+      await dir.delete(recursive: true);
+    },
+  );
 }
 
 void _settingsTests() {

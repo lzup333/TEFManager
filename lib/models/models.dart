@@ -452,6 +452,9 @@ class ModItem {
               .toList()
         : const [],
     updateInfoUrl: _asString(m['updateInfoUrl']),
+    pageClass: _asString(m['pageClass']).isEmpty
+        ? 'default.PageClass'
+        : _asString(m['pageClass']),
   );
 }
 
