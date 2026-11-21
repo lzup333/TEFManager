@@ -22,3 +22,10 @@
 -keep class com.wind.meditor.** { *; }
 -dontwarn com.android.tools.build.apkzlib.**
 -dontwarn com.android.apksig.**
+
+
+# ModPage 页面 JAR 由外部 Mod 编译，运行时会直接引用 Kotlin 运行时类。
+# R8 会因为宿主力自身已内联这些调用而把它们裁掉，导致外部页面
+# 报 "Failed resolution of: Lkotlin/jvm/internal/Intrinsics;"。
+-keep class kotlin.** { *; }
+-keep interface kotlin.** { *; }
