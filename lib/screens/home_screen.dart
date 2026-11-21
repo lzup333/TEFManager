@@ -184,9 +184,8 @@ Future<void> _launchGame(BuildContext context) async {
   }
   final ok = await app.launchSelected();
   if (!ok && context.mounted) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(tr('home.game.launchFailed'))));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(tr('home.game.launchFailed'))));
   }
 }
 
@@ -221,9 +220,8 @@ Future<void> _showRootRequired(BuildContext context) async {
                   await _launchGame(context);
                 } else {
                   setState(() {});
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text(tr('root.denied'))));
+                  ScaffoldMessenger.of(context)
+                      .showSnackBar(SnackBar(content: Text(tr('root.denied'))));
                 }
               },
               child: Text(tr('root.required.retry')),
@@ -247,9 +245,8 @@ Future<void> _showModeDialog(BuildContext context) async {
         children: [
           Text(
             app.moduleActive ? tr('mode.root') : tr('mode.external'),
-            style: Theme.of(
-              context,
-            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+            style: Theme.of(context).textTheme.titleSmall
+                ?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 4),
           Text(
@@ -375,18 +372,16 @@ class _GameTile extends StatelessWidget {
                   children: [
                     Text(
                       displayName(game),
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: Theme.of(context).textTheme.titleSmall
+                          ?.copyWith(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       game.apkPackName,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
+                      style: Theme.of(context).textTheme.bodySmall
+                          ?.copyWith(color: scheme.onSurfaceVariant),
                     ),
                   ],
                 ),
@@ -472,9 +467,8 @@ class _AddGameDialogState extends State<_AddGameDialog> {
                   const SizedBox(height: 6),
                   Text(
                     tr('home.patch.hint'),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
+                    style: Theme.of(context).textTheme.bodySmall
+                        ?.copyWith(color: scheme.onSurfaceVariant),
                   ),
                 ],
               )
@@ -542,9 +536,8 @@ class _AddGameDialogState extends State<_AddGameDialog> {
                         padding: const EdgeInsets.only(top: 4),
                         child: Text(
                           tr('home.patch.entranceWorng', {'SDK': app.sdk}),
-                          style: Theme.of(
-                            context,
-                          ).textTheme.bodySmall?.copyWith(color: scheme.error),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: scheme.error),
                         ),
                       ),
                     const SizedBox(height: 10),
@@ -575,9 +568,8 @@ class _AddGameDialogState extends State<_AddGameDialog> {
                       const SizedBox(height: 10),
                       Text(
                         _error!,
-                        style: Theme.of(
-                          context,
-                        ).textTheme.bodySmall?.copyWith(color: scheme.error),
+                        style: Theme.of(context).textTheme.bodySmall
+                            ?.copyWith(color: scheme.error),
                       ),
                     ],
                   ],
@@ -640,9 +632,8 @@ class _AddGameDialogState extends State<_AddGameDialog> {
 
     if (saved) {
       Navigator.pop(context);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(tr('home.patch.saved'))));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(tr('home.patch.saved'))));
       await app.refreshGames();
     } else {
       setState(() {
@@ -677,9 +668,8 @@ class _StepLine extends StatelessWidget {
             ),
             child: Text(
               '$number',
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: scheme.onPrimaryContainer,
-              ),
+              style: Theme.of(context).textTheme.labelSmall
+                  ?.copyWith(color: scheme.onPrimaryContainer),
             ),
           ),
           const SizedBox(width: 10),

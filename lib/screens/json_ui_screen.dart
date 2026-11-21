@@ -113,6 +113,24 @@ class _JsonUiScreenState extends State<JsonUiScreen> {
             child: Text(node.str('label', tr('mod.page.defaultButton'))),
           ),
         );
+      case 'pickFile':
+        final id = node.str('id');
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: FilledButton.icon(
+            onPressed: () async {
+              final files = await NativeBridge.instance.pickFiles(
+                multiple: node.boolValue('multiple'),
+                mimeTypes: _mimeTypes(node.props['extensions']),
+              );
+              if (files.isEmpty || !mounted) return;
+              await _event(id, files.join('\n'));
+            },
+            icon: const Icon(Icons.attach_file),
+            label: Text(node.str('label', tr('mod.page.selectFile'))),
+          ),
+        );
+
       case 'checkbox':
         return CheckboxListTile(
           contentPadding: EdgeInsets.zero,
@@ -179,6 +197,32 @@ class _JsonUiScreenState extends State<JsonUiScreen> {
 
   static double numValue(dynamic value, double fallback) =>
       value is num ? value.toDouble() : (double.tryParse('$value') ?? fallback);
+}
+
+List<String> _mimeTypes(dynamic value) {
+  if (value is! List) return const ['*/*'];
+  const known = {
+    '.json': 'application/json',
+    '.txt': 'text/plain',
+    '.lua': 'text/plain',
+    '.csv': 'text/csv',
+    '.xml': 'text/xml',
+    '.html': 'text/html',
+    '.png': 'image/png',
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.gif': 'image/gif',
+    '.pdf': 'application/pdf',
+    '.zip': 'application/zip',
+  };
+  final out = <String>{};
+  for (final item in value) {
+    var ext = item.toString().toLowerCase();
+    if (!ext.startsWith('.')) ext = '.$ext';
+    final mime = known[ext];
+    if (mime != null) out.add(mime);
+  }
+  return out.isEmpty ? const ['*/*'] : out.toList();
 }
 
 class _Node {

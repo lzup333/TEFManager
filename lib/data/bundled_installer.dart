@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
+
 import '../core/native_bridge.dart';
 
 import '../models/models.dart';

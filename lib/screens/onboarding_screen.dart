@@ -249,9 +249,8 @@ class _AgreementStep extends StatelessWidget {
         children: [
           Text(
             tr('onboarding.agreement.title'),
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            style: Theme.of(context).textTheme.titleMedium
+                ?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 4),
           Text(
@@ -272,9 +271,8 @@ class _AgreementStep extends StatelessWidget {
               child: SingleChildScrollView(
                 child: Text(
                   tr('onboarding.agreement.text'),
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(height: 1.55),
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(height: 1.55),
                 ),
               ),
             ),
@@ -307,9 +305,8 @@ class _TipsStep extends StatelessWidget {
         children: [
           Text(
             tr('onboarding.tips.title'),
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            style: Theme.of(context).textTheme.titleMedium
+                ?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 4),
           Text(
@@ -370,9 +367,8 @@ class _InstallStep extends StatelessWidget {
             done
                 ? tr('onboarding.install.completeTitle')
                 : tr('onboarding.install.title'),
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            style: Theme.of(context).textTheme.titleMedium
+                ?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 4),
           Text(
@@ -383,9 +379,8 @@ class _InstallStep extends StatelessWidget {
                           'component': currentLabel,
                         })
                       : tr('onboarding.install.start')),
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: scheme.onSurfaceVariant),
           ),
           const SizedBox(height: 14),
           ClipRRect(
@@ -434,9 +429,8 @@ class _InstallStep extends StatelessWidget {
                           step.error ?? '',
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: Theme.of(
-                            context,
-                          ).textTheme.bodySmall?.copyWith(color: scheme.error),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: scheme.error),
                         )
                       : null,
                   trailing: step == null

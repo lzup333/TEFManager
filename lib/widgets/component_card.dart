@@ -176,9 +176,8 @@ class ComponentCard extends StatelessWidget {
                       '$pkgId  ·  v$version',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
+                      style: Theme.of(context).textTheme.bodySmall
+                          ?.copyWith(color: scheme.onSurfaceVariant),
                     ),
                     if (author.isNotEmpty) ...[
                       const SizedBox(height: 1),
@@ -186,9 +185,8 @@ class ComponentCard extends StatelessWidget {
                         author,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                        ),
+                        style: Theme.of(context).textTheme.labelSmall
+                            ?.copyWith(color: scheme.onSurfaceVariant),
                       ),
                     ],
                     if (brief != null && brief!.isNotEmpty) ...[

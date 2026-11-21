@@ -362,9 +362,9 @@ class ResourcePackStore {
     final entry = _entry(archive, 'pack_info.json');
     if (entry == null) return null;
     try {
-      final map =
-          (jsonDecode(utf8.decode(entry.content, allowMalformed: true)) as Map)
-              .cast<String, dynamic>();
+      final map = (jsonDecode(
+        utf8.decode(entry.content, allowMalformed: true),
+      ) as Map).cast<String, dynamic>();
       return switch (map['type']?.toString().toLowerCase()) {
         'audiopack' => PackType.audio,
         'texturepack' => PackType.texture,
@@ -387,10 +387,9 @@ class ResourcePackStore {
     final terraria = _entry(archive, 'pack.json');
     if (terraria != null) {
       try {
-        final map =
-            (jsonDecode(utf8.decode(terraria.content, allowMalformed: true))
-                    as Map)
-                .cast<String, dynamic>();
+        final map = (jsonDecode(
+          utf8.decode(terraria.content, allowMalformed: true),
+        ) as Map).cast<String, dynamic>();
         final version = map['Version'];
         var versionText = '1.0';
         if (version is Map) {
@@ -416,9 +415,9 @@ class ResourcePackStore {
     final entry = _entry(archive, 'pack_info.json');
     if (entry == null) return null;
     try {
-      final map =
-          (jsonDecode(utf8.decode(entry.content, allowMalformed: true)) as Map)
-              .cast<String, dynamic>();
+      final map = (jsonDecode(
+        utf8.decode(entry.content, allowMalformed: true),
+      ) as Map).cast<String, dynamic>();
       final name = map['name']?.toString();
       if (name == null || name.isEmpty) return null;
       return _PackInfo(

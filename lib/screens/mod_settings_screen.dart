@@ -69,9 +69,8 @@ class _ModSettingsScreenState extends State<ModSettingsScreen> {
     await app.saveModSettings(widget.loaderId, widget.mod.pkgId, _values);
     if (!mounted) return;
     setState(() => _saving = false);
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(tr('mod.settings.saved'))));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(tr('mod.settings.saved'))));
   }
 
   void _resetDefaults() {
@@ -141,9 +140,8 @@ class _ModSettingsScreenState extends State<ModSettingsScreen> {
                       padding: const EdgeInsets.fromLTRB(20, 18, 20, 6),
                       child: Text(
                         entry.key,
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
+                        style: Theme.of(context).textTheme.titleSmall
+                            ?.copyWith(fontWeight: FontWeight.w700),
                       ),
                     ),
                   Card(

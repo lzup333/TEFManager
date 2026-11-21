@@ -166,10 +166,8 @@ class OpenSourceScreen extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
             child: Text(
               tr('oss.notice'),
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: scheme.onSurfaceVariant,
-                height: 1.5,
-              ),
+              style: Theme.of(context).textTheme.bodySmall
+                  ?.copyWith(color: scheme.onSurfaceVariant, height: 1.5),
             ),
           ),
         ],

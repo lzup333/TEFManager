@@ -107,9 +107,9 @@ class SettingsScreen extends StatelessWidget {
                               tr('settings.appearance.backgroundDimDesc'),
                               style: Theme.of(context).textTheme.bodySmall
                                   ?.copyWith(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSurfaceVariant,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
                                   ),
                             ),
                           ],
@@ -153,9 +153,9 @@ class SettingsScreen extends StatelessWidget {
                             tr('settings.appearance.fontSizeDec'),
                             style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurfaceVariant,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
                                 ),
                           ),
                         ],
@@ -438,9 +438,8 @@ class SettingsScreen extends StatelessWidget {
     final paths = await app.pickKernelFile();
     if (!context.mounted) return;
     if (paths.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(tr('manager.import.empty'))));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(tr('manager.import.empty'))));
       return;
     }
     showDialog<void>(
@@ -485,15 +484,13 @@ class SettingsScreen extends StatelessWidget {
     final candidates = await app.checkUpdates();
     if (!context.mounted) return;
     if (candidates == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(tr('update.failed'))));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(tr('update.failed'))));
       return;
     }
     if (candidates.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(tr('update.none'))));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(tr('update.none'))));
       return;
     }
     await showDialog<void>(
@@ -541,9 +538,8 @@ class SettingsScreen extends StatelessWidget {
                     if (!context.mounted) return;
                     Navigator.of(context, rootNavigator: true).pop();
                     if (error != null) {
-                      ScaffoldMessenger.of(
-                        context,
-                      ).showSnackBar(SnackBar(content: Text(error)));
+                      ScaffoldMessenger.of(context)
+                          .showSnackBar(SnackBar(content: Text(error)));
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text(tr('update.done'))),
@@ -601,9 +597,8 @@ class SettingsScreen extends StatelessWidget {
   }
 
   void _notReady(BuildContext context) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(tr('home.add.notReady'))));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(tr('home.add.notReady'))));
   }
 }
 

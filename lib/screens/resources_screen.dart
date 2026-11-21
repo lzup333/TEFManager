@@ -158,9 +158,8 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
                       pack.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: Theme.of(context).textTheme.titleSmall
+                          ?.copyWith(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 2),
                     Text(
@@ -325,9 +324,8 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
     final paths = await app.pickPackageFiles();
     if (!context.mounted) return;
     if (paths.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(tr('manager.import.empty'))));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(tr('manager.import.empty'))));
       return;
     }
 
@@ -382,9 +380,8 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
                 padding: const EdgeInsets.only(top: 8),
                 child: Text(
                   result.error ?? 'unknown',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.error,
-                  ),
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(color: Theme.of(context).colorScheme.error),
                 ),
               ),
           ],
@@ -420,16 +417,14 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
             children: [
               Text(
                 pack.name,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                style: Theme.of(context).textTheme.titleLarge
+                    ?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 4),
               Text(
                 '${pack.author} · v${pack.version}',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+                style: Theme.of(context).textTheme.bodySmall
+                    ?.copyWith(color: scheme.onSurfaceVariant),
               ),
               const SizedBox(height: 12),
               Wrap(
@@ -459,17 +454,15 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
                 const SizedBox(height: 6),
                 Text(
                   pack.description,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(height: 1.5),
+                  style: Theme.of(context).textTheme.bodyMedium
+                      ?.copyWith(height: 1.5),
                 ),
               ],
               const SizedBox(height: 16),
               SelectableText(
                 pack.fileName,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+                style: Theme.of(context).textTheme.bodySmall
+                    ?.copyWith(color: scheme.onSurfaceVariant),
               ),
             ],
           ),

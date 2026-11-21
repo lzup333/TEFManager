@@ -445,9 +445,8 @@ class _ManagerScreenState extends State<ManagerScreen> {
               children: [
                 Text(
                   tr('manager.group.title'),
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: Theme.of(context).textTheme.titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 12),
                 Row(
@@ -850,9 +849,8 @@ class _ManagerScreenState extends State<ManagerScreen> {
                 ].join('  ·  '),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
+                style: Theme.of(context).textTheme.labelSmall
+                    ?.copyWith(color: scheme.onSurfaceVariant),
               ),
             ],
           ),
@@ -925,9 +923,8 @@ class _ManagerScreenState extends State<ManagerScreen> {
     final paths = await app.pickPackageFiles();
     if (!context.mounted) return;
     if (paths.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(tr('manager.import.empty'))));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(tr('manager.import.empty'))));
       return;
     }
 
@@ -1053,9 +1050,8 @@ class _ManagerScreenState extends State<ManagerScreen> {
                 padding: const EdgeInsets.only(top: 10),
                 child: Text(
                   '${result.error ?? 'unknown'}\n${tr('manager.install.failDetail')}',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.error,
-                  ),
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(color: Theme.of(context).colorScheme.error),
                 ),
               ),
           ],
@@ -1334,24 +1330,21 @@ class _ManagerScreenState extends State<ManagerScreen> {
             children: [
               Text(
                 title.isEmpty ? pkgId : title,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                style: Theme.of(context).textTheme.titleLarge
+                    ?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 4),
               Text(
                 '$pkgId · v$version ($versionCode)',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+                style: Theme.of(context).textTheme.bodySmall
+                    ?.copyWith(color: scheme.onSurfaceVariant),
               ),
               if (author.isNotEmpty) ...[
                 const SizedBox(height: 2),
                 Text(
                   author,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(color: scheme.onSurfaceVariant),
                 ),
               ],
               if (platforms.isNotEmpty) ...[
@@ -1387,9 +1380,8 @@ class _ManagerScreenState extends State<ManagerScreen> {
                 const SizedBox(height: 6),
                 Text(
                   description,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(height: 1.5),
+                  style: Theme.of(context).textTheme.bodyMedium
+                      ?.copyWith(height: 1.5),
                 ),
               ],
               if (dependence.isNotEmpty) ...[
@@ -1411,9 +1403,8 @@ class _ManagerScreenState extends State<ManagerScreen> {
                 const SizedBox(height: 16),
                 SelectableText(
                   detailsURL,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: scheme.primary),
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(color: scheme.primary),
                 ),
               ],
               if (footer != null) ...[
@@ -1456,9 +1447,8 @@ class _ModGroupHeader extends StatelessWidget {
           Expanded(
             child: Text(
               '$name · $count',
-              style: Theme.of(
-                context,
-              ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w600),
+              style: Theme.of(context).textTheme.labelMedium
+                  ?.copyWith(fontWeight: FontWeight.w600),
             ),
           ),
           if (onRename != null || onDelete != null)
