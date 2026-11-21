@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import '../app.dart';
@@ -411,6 +413,17 @@ class _ManagerScreenState extends State<ManagerScreen> {
         mod.name,
         loaderId: loaderId,
       ),
+      onOpenPage: () {
+        final jar =
+            '${app.rootDir.path}/mods/$loaderId/private/${mod.pkgId}/page/android.jar';
+        if (!File(jar).existsSync()) return;
+        app.openModPage(
+          jarPath: jar,
+          className: mod.pageClass,
+          loaderId: loaderId,
+          pkgId: mod.pkgId,
+        );
+      },
       onMoveGroup: hasGroups
           ? () => _showMoveGroup(context, app, loaderId, mod)
           : () => _showGroupManager(context, app, loaderId),

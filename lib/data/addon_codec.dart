@@ -93,6 +93,7 @@ Uint8List encodeMod(ModItem item) {
     w.writeMessage(21, _encodeSetting(s));
   }
   w.writeString(22, item.updateInfoUrl);
+  w.writeString(23, item.pageClass);
   return w.takeBytes();
 }
 
@@ -309,6 +310,7 @@ ModItem decodeMod(Uint8List bytes) {
       extended = false;
   final settings = <ModSetting>[];
   var updateInfoUrl = '';
+  var pageClass = 'default.PageClass';
   final r = PbReader(bytes);
   while (!r.isDone) {
     final f = r.readField();
@@ -363,6 +365,9 @@ ModItem decodeMod(Uint8List bytes) {
         settings.add(_decodeSetting(f.asBytes));
       case 22:
         updateInfoUrl = f.asString;
+      case 23:
+        final value = f.asString;
+        if (value.isNotEmpty) pageClass = value;
     }
   }
   return ModItem(
@@ -388,6 +393,7 @@ ModItem decodeMod(Uint8List bytes) {
     hasExtendedContent: extended,
     settings: settings,
     updateInfoUrl: updateInfoUrl,
+    pageClass: pageClass,
   );
 }
 

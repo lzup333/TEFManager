@@ -18,10 +18,15 @@ class NativeBridge {
   static const MethodChannel _channel = MethodChannel(
     'eternal.future.tefmanager/native',
   );
+  static const MethodChannel _modPageChannel = MethodChannel(
+    'eternal.future.tefmanager/modpage',
+  );
 
   bool _available = true;
   final StreamController<String> _patchProgress =
       StreamController<String>.broadcast();
+  final StreamController<void> _modPageClosed =
+      StreamController<void>.broadcast();
 
   NativeBridge._() {
     _channel.setMethodCallHandler((call) async {
@@ -33,6 +38,37 @@ class NativeBridge {
       }
       return null;
     });
+    _modPageChannel.setMethodCallHandler((call) async {
+      if (call.method == 'modpage.closed') {
+        _modPageClosed.add(null);
+      }
+      return null;
+    });
+  }
+
+  Stream<void> get modPageClosed => _modPageClosed.stream;
+
+  Future<bool> openModPage({
+    required String jarPath,
+    required String className,
+    required Map<String, dynamic> params,
+  }) async {
+    try {
+      final result = await _modPageChannel.invokeMethod<bool>('open', {
+        'jarPath': jarPath,
+        'className': className,
+        'params': params,
+      });
+      return result ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> closeModPage() async {
+    try {
+      await _modPageChannel.invokeMethod<void>('close');
+    } catch (_) {}
   }
 
   /// Emits i18n keys from `home.patch.progress.*` while patching.

@@ -389,6 +389,7 @@ class ModItem {
     this.hasExtendedContent = false,
     this.settings = const [],
     this.updateInfoUrl = '',
+    this.pageClass = 'default.PageClass',
   });
 
   final String pkgId;
@@ -413,6 +414,7 @@ class ModItem {
   final bool hasExtendedContent;
   final List<ModSetting> settings;
   final String updateInfoUrl;
+  final String pageClass;
 
   factory ModItem.fromMap(Map<String, dynamic> m) => ModItem(
     pkgId: _asString(m['pkgId']),
