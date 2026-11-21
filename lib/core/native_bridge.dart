@@ -39,29 +39,41 @@ class NativeBridge {
       return null;
     });
     _modPageChannel.setMethodCallHandler((call) async {
-      if (call.method == 'modpage.closed') {
-        _modPageClosed.add(null);
-      }
+      if (call.method == 'modpage.closed') _modPageClosed.add(null);
       return null;
     });
   }
 
   Stream<void> get modPageClosed => _modPageClosed.stream;
 
-  Future<bool> openModPage({
+  Future<String?> openModPage({
     required String jarPath,
     required String className,
-    required Map<String, dynamic> params,
+    required String privatePath,
+    required String dataPath,
   }) async {
     try {
-      final result = await _modPageChannel.invokeMethod<bool>('open', {
+      final raw = await _modPageChannel.invokeMethod<Map>('open', {
         'jarPath': jarPath,
         'className': className,
-        'params': params,
+        'privatePath': privatePath,
+        'dataPath': dataPath,
       });
-      return result ?? false;
+      return raw?['json']?.toString();
     } catch (_) {
-      return false;
+      return null;
+    }
+  }
+
+  Future<String?> modPageEvent(String id, String? value) async {
+    try {
+      final raw = await _modPageChannel.invokeMethod<Map>('event', {
+        'id': id,
+        'value': value,
+      });
+      return raw?['json']?.toString();
+    } catch (_) {
+      return null;
     }
   }
 

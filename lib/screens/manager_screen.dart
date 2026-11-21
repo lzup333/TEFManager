@@ -11,6 +11,7 @@ import '../core/utils.dart';
 import '../models/models.dart';
 import '../widgets/common.dart';
 import '../widgets/component_card.dart';
+import 'json_ui_screen.dart';
 import 'mod_settings_screen.dart';
 
 class ManagerScreen extends StatefulWidget {
@@ -413,15 +414,29 @@ class _ManagerScreenState extends State<ManagerScreen> {
         mod.name,
         loaderId: loaderId,
       ),
-      onOpenPage: () {
-        final jar =
-            '${app.rootDir.path}/mods/$loaderId/private/${mod.pkgId}/page/android.jar';
+      onOpenPage: () async {
+        final privatePath =
+            '${app.rootDir.path}/mods/$loaderId/private/${mod.pkgId}';
+        final jar = '$privatePath/page/android.jar';
         if (!File(jar).existsSync()) return;
-        app.openModPage(
+        final json = await app.openModPage(
           jarPath: jar,
           className: mod.pageClass,
           loaderId: loaderId,
           pkgId: mod.pkgId,
+        );
+        if (json == null || !mounted) return;
+        Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => JsonUiScreen(
+              jarPath: jar,
+              className: mod.pageClass,
+              loaderId: loaderId,
+              pkgId: mod.pkgId,
+              initialJson: json,
+              privatePath: privatePath,
+            ),
+          ),
         );
       },
       onMoveGroup: hasGroups

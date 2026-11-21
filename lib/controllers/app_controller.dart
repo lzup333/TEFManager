@@ -661,10 +661,7 @@ class AppController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Stream<void> get modPageClosed => _native.modPageClosed;
-
-  /// Opens a mod-provided Compose page in the native Android overlay.
-  Future<bool> openModPage({
+  Future<String?> openModPage({
     required String jarPath,
     required String className,
     required String loaderId,
@@ -672,11 +669,14 @@ class AppController extends ChangeNotifier {
   }) => _native.openModPage(
     jarPath: jarPath,
     className: className,
-    params: {
-      'private-path': '${_rootDir.path}/mods/$loaderId/private/$pkgId',
-      'data-path': '${_rootDir.path}/mods/$loaderId/mod/$pkgId',
-    },
+    privatePath: '${_rootDir.path}/mods/$loaderId/private/$pkgId',
+    dataPath: '${_rootDir.path}/mods/$loaderId/mod/$pkgId',
   );
+
+  Future<String?> modPageEvent(String id, String? value) =>
+      _native.modPageEvent(id, value);
+
+  Future<void> closeModPage() => _native.closeModPage();
 
   // -------------------------------------------------------------------------
   // Data backup / restore
