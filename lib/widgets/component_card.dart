@@ -95,7 +95,6 @@ class ComponentCard extends StatelessWidget {
     this.onTap,
     this.onDelete,
     this.onMoveGroup,
-    this.onOpenPage,
     this.essential = false,
     this.hasUpdate = false,
   });
@@ -111,7 +110,6 @@ class ComponentCard extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onDelete;
   final VoidCallback? onMoveGroup;
-  final VoidCallback? onOpenPage;
   final bool essential;
   final bool hasUpdate;
 
@@ -224,7 +222,6 @@ class ComponentCard extends StatelessWidget {
                       onSelected: (value) {
                         if (value == 'details') onTap?.call();
                         if (value == 'group') onMoveGroup?.call();
-                        if (value == 'page') onOpenPage?.call();
                         if (value == 'delete') onDelete?.call();
                       },
                       itemBuilder: (context) => [
@@ -237,16 +234,6 @@ class ComponentCard extends StatelessWidget {
                             title: Text(tr('manager.action.details')),
                           ),
                         ),
-                        if (onOpenPage != null)
-                          const PopupMenuItem(
-                            value: 'page',
-                            child: ListTile(
-                              dense: true,
-                              contentPadding: EdgeInsets.zero,
-                              leading: Icon(Icons.open_in_new_rounded),
-                              title: Text('自定义界面'),
-                            ),
-                          ),
                         if (onMoveGroup != null)
                           PopupMenuItem(
                             value: 'group',

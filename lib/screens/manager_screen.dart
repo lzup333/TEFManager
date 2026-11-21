@@ -414,31 +414,6 @@ class _ManagerScreenState extends State<ManagerScreen> {
         mod.name,
         loaderId: loaderId,
       ),
-      onOpenPage: () async {
-        final privatePath =
-            '${app.rootDir.path}/mods/$loaderId/private/${mod.pkgId}';
-        final jar = '$privatePath/page/android.jar';
-        if (!File(jar).existsSync()) return;
-        final json = await app.openModPage(
-          jarPath: jar,
-          className: mod.pageClass,
-          loaderId: loaderId,
-          pkgId: mod.pkgId,
-        );
-        if (json == null || !mounted) return;
-        Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            builder: (_) => JsonUiScreen(
-              jarPath: jar,
-              className: mod.pageClass,
-              loaderId: loaderId,
-              pkgId: mod.pkgId,
-              initialJson: json,
-              privatePath: privatePath,
-            ),
-          ),
-        );
-      },
       onMoveGroup: hasGroups
           ? () => _showMoveGroup(context, app, loaderId, mod)
           : () => _showGroupManager(context, app, loaderId),
@@ -1197,6 +1172,11 @@ class _ManagerScreenState extends State<ManagerScreen> {
     ModItem item,
     String loaderId,
   ) {
+    final privatePath =
+        '${app.rootDir.path}/mods/$loaderId/private/${item.pkgId}';
+    final jar = '$privatePath/page/android.jar';
+    final hasPage = File(jar).existsSync();
+
     _showDetails(
       context,
       title: item.name,
@@ -1221,22 +1201,62 @@ class _ManagerScreenState extends State<ManagerScreen> {
           _Info(tr('manager.mod.conflict'), item.conflicts.join(', ')),
       ],
       features: item.features.map(_featureLabel).toList(),
-      footer: item.settings.isEmpty
+      footer: (!hasPage && item.settings.isEmpty)
           ? null
-          : FilledButton.icon(
-              onPressed: () {
-                Navigator.of(context).pop();
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) =>
-                        ModSettingsScreen(loaderId: loaderId, mod: item),
+          : Row(
+              children: [
+                if (hasPage)
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: () async {
+                        final json = await app.openModPage(
+                          jarPath: jar,
+                          className: item.pageClass,
+                          loaderId: loaderId,
+                          pkgId: item.pkgId,
+                        );
+                        if (json == null || !context.mounted) return;
+                        Navigator.of(context).pop();
+                        Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => JsonUiScreen(
+                              jarPath: jar,
+                              className: item.pageClass,
+                              loaderId: loaderId,
+                              pkgId: item.pkgId,
+                              initialJson: json,
+                              privatePath: privatePath,
+                            ),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.dashboard_rounded),
+                      label: Text(tr('mod.page.title')),
+                    ),
                   ),
-                );
-              },
-              icon: const Icon(Icons.tune_rounded),
-              label: Text(
-                '${tr('mod.settings.title')} (${item.settings.length})',
-              ),
+                if (hasPage && item.settings.isNotEmpty)
+                  const SizedBox(width: 12),
+                if (item.settings.isNotEmpty)
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => ModSettingsScreen(
+                              loaderId: loaderId,
+                              mod: item,
+                            ),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.tune_rounded),
+                      label: Text(
+                        '${tr('mod.settings.title')} (${item.settings.length})',
+                      ),
+                    ),
+                  ),
+              ],
             ),
     );
   }
