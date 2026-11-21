@@ -92,6 +92,8 @@ class AppConfig {
     'maxAppLogSizeMB': maxAppLogSizeMB,
     'modSupportEnabled': modSupportEnabled,
     'redirectSavesEnabled': redirectSavesEnabled,
+    'backgroundImage': backgroundImage,
+    'backgroundDim': backgroundDim,
   };
 
   factory AppConfig.fromJson(Map<String, dynamic> json) {

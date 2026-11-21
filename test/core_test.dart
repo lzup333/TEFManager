@@ -11,9 +11,9 @@ import 'package:tefmanager/data/resource_pack_store.dart';
 import 'package:tefmanager/data/mod_settings_store.dart';
 import 'package:tefmanager/data/bundled_installer.dart';
 import 'package:tefmanager/data/backup_store.dart';
+import 'package:tefmanager/core/config.dart';
 import 'package:tefmanager/core/easter_egg.dart';
 import 'package:tefmanager/core/secrets.dart';
-import 'package:tefmanager/data/mod_groups_store.dart';
 import 'package:archive/archive.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -99,6 +99,7 @@ void main() {
   _backupTests();
   _bundleTests();
   _easterEggTests();
+  _configTests();
 }
 
 // ---------------------------------------------------------------------------
@@ -447,5 +448,23 @@ void _easterEggTests() {
 
   test('empty seed hides the UI', () {
     expect(resolveEasterEffect(''), EasterEffect.hideUi);
+  });
+}
+
+void _configTests() {
+  test('AppConfig round-trip keeps background settings', () async {
+    final dir = await Directory.systemTemp.createTemp('tefcfg');
+    final store = ConfigStore(File('${dir.path}/app_config.json'));
+    final original = AppConfig(
+      backgroundImage: 'bg_123.jpg',
+      backgroundDim: 0.4,
+      themeMode: AppThemeMode.dark,
+    );
+    await store.save(original);
+    final loaded = await store.load();
+    expect(loaded.backgroundImage, 'bg_123.jpg');
+    expect(loaded.backgroundDim, 0.4);
+    expect(loaded.themeMode, AppThemeMode.dark);
+    await dir.delete(recursive: true);
   });
 }
