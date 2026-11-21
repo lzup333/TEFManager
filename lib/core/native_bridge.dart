@@ -18,10 +18,15 @@ class NativeBridge {
   static const MethodChannel _channel = MethodChannel(
     'eternal.future.tefmanager/native',
   );
+  static const MethodChannel _modPageChannel = MethodChannel(
+    'eternal.future.tefmanager/modpage',
+  );
 
   bool _available = true;
   final StreamController<String> _patchProgress =
       StreamController<String>.broadcast();
+  final StreamController<void> _modPageClosed =
+      StreamController<void>.broadcast();
 
   NativeBridge._() {
     _channel.setMethodCallHandler((call) async {
@@ -33,6 +38,49 @@ class NativeBridge {
       }
       return null;
     });
+    _modPageChannel.setMethodCallHandler((call) async {
+      if (call.method == 'modpage.closed') _modPageClosed.add(null);
+      return null;
+    });
+  }
+
+  Stream<void> get modPageClosed => _modPageClosed.stream;
+
+  Future<({String? json, String? error})> openModPage({
+    required String jarPath,
+    required String className,
+    required String privatePath,
+    required String dataPath,
+  }) async {
+    try {
+      final raw = await _modPageChannel.invokeMethod<Map>('open', {
+        'jarPath': jarPath,
+        'className': className,
+        'privatePath': privatePath,
+        'dataPath': dataPath,
+      });
+      return (json: raw?['json']?.toString(), error: null);
+    } catch (e) {
+      return (json: null, error: e.toString());
+    }
+  }
+
+  Future<String?> modPageEvent(String id, String? value) async {
+    try {
+      final raw = await _modPageChannel.invokeMethod<Map>('event', {
+        'id': id,
+        'value': value,
+      });
+      return raw?['json']?.toString();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> closeModPage() async {
+    try {
+      await _modPageChannel.invokeMethod<void>('close');
+    } catch (_) {}
   }
 
   /// Emits i18n keys from `home.patch.progress.*` while patching.

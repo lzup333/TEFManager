@@ -661,6 +661,23 @@ class AppController extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<({String? json, String? error})> openModPage({
+    required String jarPath,
+    required String className,
+    required String loaderId,
+    required String pkgId,
+  }) => _native.openModPage(
+    jarPath: jarPath,
+    className: className,
+    privatePath: '${_rootDir.path}/mods/$loaderId/private/$pkgId',
+    dataPath: '${_rootDir.path}/mods/$loaderId/mod/$pkgId',
+  );
+
+  Future<String?> modPageEvent(String id, String? value) =>
+      _native.modPageEvent(id, value);
+
+  Future<void> closeModPage() => _native.closeModPage();
+
   // -------------------------------------------------------------------------
   // Data backup / restore
   // -------------------------------------------------------------------------
