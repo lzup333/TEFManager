@@ -60,6 +60,35 @@ class _PackKindConfig {
   final bool hasTypeField;
 }
 
+
+/// Zip entries may differ in case, use backslashes, or carry a leading `./`.
+String _normEntry(String name) {
+  var value = name.replaceAll('\\', '/');
+  while (value.startsWith('./')) {
+    value = value.substring(2);
+  }
+  value = value.replaceAll(RegExp('/+'), '/');
+  return value.toLowerCase();
+}
+
+bool _hasDir(Archive archive, String dir) {
+  final want = _normEntry(dir);
+  return archive.files.any((entry) {
+    final name = _normEntry(entry.name);
+    return name == want || name.startsWith('$want/');
+  });
+}
+
+/// Case-insensitive JSON field lookup (pack metadata is not consistently cased).
+dynamic _ciValue(Map<dynamic, dynamic> map, String key) {
+  if (map.containsKey(key)) return map[key];
+  final want = key.toLowerCase();
+  for (final entry in map.entries) {
+    if (entry.key.toString().toLowerCase() == want) return entry.value;
+  }
+  return null;
+}
+
 /// Storage-compatible resource pack manager.
 class ResourcePackStore {
   ResourcePackStore(this.dataDir);
@@ -289,7 +318,7 @@ class ResourcePackStore {
 
     onProgress?.call('icon');
     final iconEntry =
-        _entry(archive, 'Icon.png') ?? _entry(archive, 'icon.png');
+        _entry(archive, 'icon.png');
     String iconPath = '';
     if (iconEntry != null) {
       final target = iconFile(type, packId);
@@ -337,19 +366,18 @@ class ResourcePackStore {
   PackType? _detectType(Archive archive) {
     final names = archive.files
         .where((e) => e.isFile)
-        .map((e) => e.name)
+        .map((e) => _normEntry(e.name))
         .toList();
-    bool hasDir(String dir) =>
-        names.any((name) => name == dir || name.startsWith('$dir/'));
 
-    if (hasDir('Content')) {
-      if (hasDir('Content/Music') || hasDir('Content/Sounds')) {
+    if (_hasDir(archive, 'Content')) {
+      if (_hasDir(archive, 'Content/Music') ||
+          _hasDir(archive, 'Content/Sounds')) {
         return PackType.audio;
       }
-      if (hasDir('Content/Images')) return PackType.texture;
+      if (_hasDir(archive, 'Content/Images')) return PackType.texture;
       return null;
     }
-    if (hasDir('Modified')) {
+    if (_hasDir(archive, 'Modified')) {
       if (names.any((n) => n.toLowerCase().endsWith('.audio'))) {
         return PackType.audio;
       }
@@ -365,7 +393,7 @@ class ResourcePackStore {
       final map =
           (_decodeJson(utf8.decode(entry.content, allowMalformed: true)) as Map)
               .cast<String, dynamic>();
-      return switch (map['type']?.toString().toLowerCase()) {
+      return switch (_ciValue(map, 'type')?.toString().toLowerCase()) {
         'audiopack' => PackType.audio,
         'texturepack' => PackType.texture,
         'languagepack' => PackType.language,
@@ -391,17 +419,18 @@ class ResourcePackStore {
             (_decodeJson(utf8.decode(terraria.content, allowMalformed: true))
                     as Map)
                 .cast<String, dynamic>();
-        final version = map['Version'];
+        final version = _ciValue(map, 'Version');
         var versionText = '1.0';
         if (version is Map) {
-          versionText = '${version['major'] ?? 0}.${version['minor'] ?? 0}';
+          versionText =
+              '${_ciValue(version, 'major') ?? 0}.${_ciValue(version, 'minor') ?? 0}';
         } else if (version != null) {
           versionText = version.toString();
         }
         return _PackInfo(
-          name: map['Name']?.toString() ?? 'Unknown',
-          author: map['Author']?.toString() ?? 'Unknown',
-          description: map['Description']?.toString() ?? '',
+          name: _ciValue(map, 'Name')?.toString() ?? 'Unknown',
+          author: _ciValue(map, 'Author')?.toString() ?? 'Unknown',
+          description: _ciValue(map, 'Description')?.toString() ?? '',
           version: versionText,
           origin: PackOrigin.terraria,
         );
@@ -419,13 +448,13 @@ class ResourcePackStore {
       final map =
           (_decodeJson(utf8.decode(entry.content, allowMalformed: true)) as Map)
               .cast<String, dynamic>();
-      final name = map['name']?.toString();
+      final name = _ciValue(map, 'name')?.toString();
       if (name == null || name.isEmpty) return null;
       return _PackInfo(
         name: name,
-        author: map['author']?.toString() ?? 'Unknown',
-        description: map['description']?.toString() ?? '',
-        version: map['version']?.toString() ?? '1.0.0',
+        author: _ciValue(map, 'author')?.toString() ?? 'Unknown',
+        description: _ciValue(map, 'description')?.toString() ?? '',
+        version: _ciValue(map, 'version')?.toString() ?? '1.0.0',
         origin: PackOrigin.tefManager,
       );
     } catch (_) {
@@ -434,8 +463,9 @@ class ResourcePackStore {
   }
 
   ArchiveFile? _entry(Archive archive, String name) {
+    final want = _normEntry(name);
     for (final entry in archive.files) {
-      if (entry.isFile && entry.name == name) return entry;
+      if (entry.isFile && _normEntry(entry.name) == want) return entry;
     }
     return null;
   }
