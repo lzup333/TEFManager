@@ -94,6 +94,7 @@ class ComponentCard extends StatelessWidget {
     this.onToggle,
     this.onTap,
     this.onDelete,
+    this.onSettings,
     this.onMoveGroup,
     this.essential = false,
     this.hasUpdate = false,
@@ -109,6 +110,7 @@ class ComponentCard extends StatelessWidget {
   final ValueChanged<bool>? onToggle;
   final VoidCallback? onTap;
   final VoidCallback? onDelete;
+  final VoidCallback? onSettings;
   final VoidCallback? onMoveGroup;
   final bool essential;
   final bool hasUpdate;
@@ -221,6 +223,7 @@ class ComponentCard extends StatelessWidget {
                       icon: const Icon(Icons.more_vert_rounded),
                       onSelected: (value) {
                         if (value == 'details') onTap?.call();
+                        if (value == 'settings') onSettings?.call();
                         if (value == 'group') onMoveGroup?.call();
                         if (value == 'delete') onDelete?.call();
                       },
@@ -234,6 +237,16 @@ class ComponentCard extends StatelessWidget {
                             title: Text(tr('manager.action.details')),
                           ),
                         ),
+                        if (onSettings != null)
+                          PopupMenuItem(
+                            value: 'settings',
+                            child: ListTile(
+                              dense: true,
+                              contentPadding: EdgeInsets.zero,
+                              leading: const Icon(Icons.tune_rounded),
+                              title: Text(tr('mod.settings.title')),
+                            ),
+                          ),
                         if (onMoveGroup != null)
                           PopupMenuItem(
                             value: 'group',

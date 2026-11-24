@@ -402,7 +402,15 @@ class _ManagerScreenState extends State<ManagerScreen> {
         value,
         loaderId: loaderId,
       ),
-      onTap: () => _showModDetails(context, app, mod, loaderId),
+      onSettings: mod.settings.isEmpty
+          ? null
+          : () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) =>
+                      ModSettingsScreen(loaderId: loaderId, mod: mod),
+                ),
+              ),
+      onTap: () => _showModDetails(context, app, mod),
       onDelete: () => _confirmDelete(
         context,
         app,
@@ -1167,7 +1175,6 @@ class _ManagerScreenState extends State<ManagerScreen> {
     BuildContext context,
     AppController app,
     ModItem item,
-    String loaderId,
   ) {
     _showDetails(
       context,
@@ -1193,23 +1200,6 @@ class _ManagerScreenState extends State<ManagerScreen> {
           _Info(tr('manager.mod.conflict'), item.conflicts.join(', ')),
       ],
       features: item.features.map(_featureLabel).toList(),
-      footer: item.settings.isEmpty
-          ? null
-          : FilledButton.icon(
-              onPressed: () {
-                Navigator.of(context).pop();
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) =>
-                        ModSettingsScreen(loaderId: loaderId, mod: item),
-                  ),
-                );
-              },
-              icon: const Icon(Icons.tune_rounded),
-              label: Text(
-                '${tr('mod.settings.title')} (${item.settings.length})',
-              ),
-            ),
     );
   }
 
