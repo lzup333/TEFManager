@@ -363,7 +363,7 @@ class ResourcePackStore {
     if (entry == null) return null;
     try {
       final map =
-          (jsonDecode(utf8.decode(entry.content, allowMalformed: true)) as Map)
+          (_decodeJson(utf8.decode(entry.content, allowMalformed: true)) as Map)
               .cast<String, dynamic>();
       return switch (map['type']?.toString().toLowerCase()) {
         'audiopack' => PackType.audio,
@@ -388,7 +388,7 @@ class ResourcePackStore {
     if (terraria != null) {
       try {
         final map =
-            (jsonDecode(utf8.decode(terraria.content, allowMalformed: true))
+            (_decodeJson(utf8.decode(terraria.content, allowMalformed: true))
                     as Map)
                 .cast<String, dynamic>();
         final version = map['Version'];
@@ -417,7 +417,7 @@ class ResourcePackStore {
     if (entry == null) return null;
     try {
       final map =
-          (jsonDecode(utf8.decode(entry.content, allowMalformed: true)) as Map)
+          (_decodeJson(utf8.decode(entry.content, allowMalformed: true)) as Map)
               .cast<String, dynamic>();
       final name = map['name']?.toString();
       if (name == null || name.isEmpty) return null;
@@ -508,6 +508,53 @@ class ResourcePackStore {
       flush: true,
     );
   }
+
+
+/// Some workshop packs contain raw newlines inside JSON strings (pack.json
+/// descriptions, most commonly). Strict jsonDecode rejects them, so escape
+/// control characters only while inside a string literal.
+dynamic _decodeJson(String text) {
+  final out = StringBuffer();
+  var inString = false;
+  var escaped = false;
+  for (final rune in text.runes) {
+    if (inString) {
+      if (escaped) {
+        out.writeCharCode(rune);
+        escaped = false;
+        continue;
+      }
+      if (rune == 0x5C) {
+        out.writeCharCode(rune);
+        escaped = true;
+        continue;
+      }
+      if (rune == 0x22) {
+        out.writeCharCode(rune);
+        inString = false;
+        continue;
+      }
+      if (rune < 0x20) {
+        switch (rune) {
+          case 0x0A:
+            out.write(r'\n');
+          case 0x0D:
+            out.write(r'\r');
+          case 0x09:
+            out.write(r'\t');
+          default:
+            out.write('\\u${rune.toRadixString(16).padLeft(4, '0')}');
+        }
+        continue;
+      }
+      out.writeCharCode(rune);
+    } else {
+      if (rune == 0x22) inString = true;
+      out.writeCharCode(rune);
+    }
+  }
+  return jsonDecode(out.toString());
+}
 
   static String generateFileName(PackType type, String name, String author) {
     String clean(String value, int max) {
